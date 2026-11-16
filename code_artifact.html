@@ -1,0 +1,1717 @@
+<!DOCTYPE html>
+<html lang="th" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Code Roulette & Quiz - สุ่มการเรียนและทดสอบเขียนโค้ด</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { font-family: 'Prompt', sans-serif; }
+        code, pre { font-family: 'Fira Code', monospace; }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(226, 232, 240, 0.8);
+        }
+        @keyframes pulse-slow {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.03); }
+        }
+        .animate-pulse-slow { animation: pulse-slow 3s infinite ease-in-out; }
+        @keyframes hero-jump {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-18px); }
+        }
+        @keyframes hero-attack {
+            0% { transform: translateX(0) scale(1); }
+            55% { transform: translateX(34px) translateY(-8px) scale(1.1); }
+            100% { transform: translateX(28px) scale(1); }
+        }
+        @keyframes slime-defeated {
+            0% { transform: scale(1) rotate(0); opacity: 1; }
+            50% { transform: scale(1.2) rotate(-18deg); opacity: 0.8; }
+            100% { transform: scale(0) rotate(35deg); opacity: 0; }
+        }
+        .hero-jump { animation: hero-jump 180ms ease-out; }
+        .hero-attack { animation: hero-attack 450ms ease-in-out forwards; }
+        .slime-defeated { animation: slime-defeated 450ms ease-in forwards; }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 text-slate-100 min-h-full flex flex-col">
+
+    <!-- Header -->
+    <header class="border-b border-slate-800 bg-slate-900/80 sticky top-0 z-50 backdrop-blur-md">
+        <div class="max-w-5xl mx-auto px-4 py-4 flex items-center justify-between">
+            <div class="flex items-center space-x-3 cursor-pointer" onclick="app.goHome()">
+                <div class="bg-gradient-to-tr from-indigo-500 to-purple-500 p-2.5 rounded-xl shadow-lg shadow-indigo-500/30">
+                    <i class="fa-solid fa-code text-white text-xl"></i>
+                </div>
+                <div>
+                    <h1 class="font-bold text-lg text-white tracking-wide">CodeQuest Roulette</h1>
+                    <p class="text-xs text-slate-400">สุ่มหัวข้อโค้ด & ทดสอบความรู้หลังเรียน</p>
+                </div>
+            </div>
+            <div class="flex items-center space-x-3">
+                <span id="streak-badge" class="bg-indigo-900/60 border border-indigo-700/50 text-indigo-300 text-xs px-3 py-1.5 rounded-full font-medium flex items-center gap-1.5 shadow-sm">
+                    <i class="fa-solid fa-fire text-amber-400"></i> ทำไปแล้ว <span id="completed-count">0</span> หัวข้อ
+                </span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="flex-grow max-w-4xl w-full mx-auto px-4 py-8 flex flex-col justify-center">
+
+        <!-- VIEW 1: HOME & ROULETTE CONTROLS -->
+        <div id="view-home" class="space-y-8 text-center animate-fade-in">
+            <div class="max-w-2xl mx-auto space-y-4">
+                <span class="bg-purple-500/10 border border-purple-500/30 text-purple-300 text-xs px-3.5 py-1.5 rounded-full uppercase tracking-wider font-semibold inline-block">
+                    <i class="fa-solid fa-wand-magic-sparkles mr-1"></i> Interactive Study & Quiz Hub
+                </span>
+                <h2 class="text-3xl sm:text-4xl font-extrabold text-white tracking-tight leading-tight">
+                    วันนี้คุณอยากฝึกเขียนโค้ดเรื่องอะไรดี?
+                </h2>
+                <p class="text-slate-400 text-sm sm:text-base">
+                    เลือกภาษาที่ต้องการเรียน แล้วระบบจะสุ่มเนื้อหาพร้อมอาจารย์พาเขียนทีละสเต็ป และควิซวัดผลหลังเรียนทันที
+                </p>
+            </div>
+
+            <!-- Language Selection Buttons -->
+            <div class="max-w-xl mx-auto bg-slate-800/60 border border-slate-700/70 rounded-2xl p-5 space-y-3">
+                <label class="text-xs font-bold text-indigo-300 uppercase tracking-wider flex items-center justify-center gap-1.5">
+                    <i class="fa-solid fa-layer-group"></i> เลือกภาษาที่ต้องการเรียน
+                </label>
+                <div id="topic-selector-group" class="flex flex-wrap justify-center gap-2">
+                    <button type="button" onclick="app.selectLanguage('all', this)" class="topic-btn active px-4 py-2 rounded-xl text-xs font-semibold border transition-all bg-indigo-600 text-white border-indigo-400 shadow-md shadow-indigo-900/40">
+                        <i class="fa-solid fa-shuffle mr-1"></i> สุ่มทั้งหมด
+                    </button>
+                    <button type="button" onclick="app.selectLanguage('Python', this)" class="topic-btn px-4 py-2 rounded-xl text-xs font-semibold border transition-all bg-slate-900/80 text-slate-300 border-slate-700 hover:border-indigo-500/50">
+                        <i class="fa-brands fa-python mr-1 text-amber-400"></i> Python
+                    </button>
+                    <button type="button" onclick="app.selectLanguage('JavaScript', this)" class="topic-btn px-4 py-2 rounded-xl text-xs font-semibold border transition-all bg-slate-900/80 text-slate-300 border-slate-700 hover:border-indigo-500/50">
+                        <i class="fa-brands fa-js mr-1 text-yellow-400"></i> JavaScript
+                    </button>
+                    <button type="button" onclick="app.selectLanguage('HTML / CSS', this)" class="topic-btn px-4 py-2 rounded-xl text-xs font-semibold border transition-all bg-slate-900/80 text-slate-300 border-slate-700 hover:border-indigo-500/50">
+                        <i class="fa-brands fa-html5 mr-1 text-orange-400"></i> HTML / CSS
+                    </button>
+                    <button type="button" onclick="app.selectLanguage('Java', this)" class="topic-btn px-4 py-2 rounded-xl text-xs font-semibold border transition-all bg-slate-900/80 text-slate-300 border-slate-700 hover:border-indigo-500/50">
+                        <i class="fa-brands fa-java mr-1 text-red-400"></i> Java
+                    </button>
+                    <button type="button" onclick="app.selectLanguage('C++', this)" class="topic-btn px-4 py-2 rounded-xl text-xs font-semibold border transition-all bg-slate-900/80 text-slate-300 border-slate-700 hover:border-indigo-500/50">
+                        <i class="fa-solid fa-code mr-1 text-blue-400"></i> C++
+                    </button>
+                    <button type="button" onclick="app.selectLanguage('C#', this)" class="topic-btn px-4 py-2 rounded-xl text-xs font-semibold border transition-all bg-slate-900/80 text-slate-300 border-slate-700 hover:border-indigo-500/50">
+                        <i class="fa-solid fa-hashtag mr-1 text-purple-400"></i> C#
+                    </button>
+                    <button type="button" onclick="app.selectLanguage('PHP', this)" class="topic-btn px-4 py-2 rounded-xl text-xs font-semibold border transition-all bg-slate-900/80 text-slate-300 border-slate-700 hover:border-indigo-500/50">
+                        <i class="fa-brands fa-php mr-1 text-indigo-300"></i> PHP
+                    </button>
+                    <button type="button" onclick="app.selectLanguage('SQL', this)" class="topic-btn px-4 py-2 rounded-xl text-xs font-semibold border transition-all bg-slate-900/80 text-slate-300 border-slate-700 hover:border-indigo-500/50">
+                        <i class="fa-solid fa-database mr-1 text-emerald-400"></i> SQL
+                    </button>
+                    <button type="button" onclick="app.selectLanguage('Go', this)" class="topic-btn px-4 py-2 rounded-xl text-xs font-semibold border transition-all bg-slate-900/80 text-slate-300 border-slate-700 hover:border-indigo-500/50">
+                        <i class="fa-solid fa-code mr-1 text-cyan-300"></i> Go
+                    </button>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-4xl mx-auto pt-2">
+                <!-- Option 1: Standard Randomizer -->
+                <button onclick="app.startRandomLesson('standard')" class="group relative bg-gradient-to-b from-indigo-600 to-indigo-700 hover:from-indigo-500 hover:to-indigo-600 text-white p-6 rounded-2xl shadow-xl shadow-indigo-900/40 border border-indigo-400/30 transition-all duration-300 hover:scale-[1.02] active:scale-95 text-left flex flex-col justify-between">
+                    <div>
+                        <div class="w-12 h-12 bg-white/10 rounded-xl flex items-center justify-center mb-4 group-hover:rotate-12 transition-transform">
+                            <i class="fa-solid fa-shuffle text-2xl text-indigo-200"></i>
+                        </div>
+                        <h3 class="font-bold text-lg mb-1">สุ่มจากฐานข้อมูลหลัก</h3>
+                        <p class="text-indigo-200 text-xs">สุ่มเนื้อหาและบทเรียนคุณภาพจากภาษาที่คุณเลือกไว้ด้านบน</p>
+                    </div>
+                    <div class="mt-6 flex items-center text-xs font-semibold text-indigo-100 group-hover:translate-x-1 transition-transform">
+                        <span>เริ่มสุ่มเนื้อหาแบบปกติ</span> <i class="fa-solid fa-arrow-right ml-2"></i>
+                    </div>
+                </button>
+
+                <!-- Option 2: AI Gemini Randomizer -->
+                <button onclick="app.startRandomLesson('ai')" class="group relative bg-gradient-to-b from-purple-600 to-indigo-700 hover:from-purple-500 hover:to-indigo-600 text-white p-6 rounded-2xl shadow-xl shadow-purple-900/40 border border-purple-400/30 transition-all duration-300 hover:scale-[1.02] active:scale-95 text-left flex flex-col justify-between">
+                    <div>
+                        <div class="w-12 h-12 bg-white/10 rounded-xl flex items-center justify-center mb-4 group-hover:rotate-12 transition-transform">
+                            <i class="fa-solid fa-brain text-2xl text-purple-200"></i>
+                        </div>
+                        <h3 class="font-bold text-lg mb-1">สุ่มเนื้อหาด้วย AI (Gemini)</h3>
+                        <p class="text-purple-200 text-xs">ให้ AI สุ่มหัวข้อใหม่ๆ ในภาษาที่คุณเลือก พร้อมสอนเขียนและออกควิซสดๆ</p>
+                    </div>
+                    <div class="mt-6 flex items-center text-xs font-semibold text-purple-100 group-hover:translate-x-1 transition-transform">
+                        <span>สุ่มเนื้อหาด้วย AI ทันที</span> <i class="fa-solid fa-arrow-right ml-2"></i>
+                    </div>
+                </button>
+
+                <button onclick="app.startQuickTest()" class="group relative bg-gradient-to-b from-emerald-600 to-teal-700 hover:from-emerald-500 hover:to-teal-600 text-white p-6 rounded-2xl shadow-xl shadow-emerald-900/40 border border-emerald-400/30 transition-all duration-300 hover:scale-[1.02] active:scale-95 text-left flex flex-col justify-between">
+                    <div>
+                        <div class="w-12 h-12 bg-white/10 rounded-xl flex items-center justify-center mb-4 group-hover:rotate-12 transition-transform">
+                            <i class="fa-solid fa-stopwatch text-2xl text-emerald-200"></i>
+                        </div>
+                        <h3 class="font-bold text-lg mb-1">ทดสอบเขียนโค้ดเร็ว</h3>
+                        <p class="text-emerald-100 text-xs">พิมพ์ตามตัวอย่าง 60 วินาที พร้อมมินิเกมต่อสู้สไลม์</p>
+                    </div>
+                    <div class="mt-6 flex items-center text-xs font-semibold text-emerald-100 group-hover:translate-x-1 transition-transform">
+                        <span>เริ่มทำโจทย์จับเวลา</span> <i class="fa-solid fa-arrow-right ml-2"></i>
+                    </div>
+                </button>
+            </div>
+
+            <!-- Quick stats / filters -->
+            <div class="pt-6 border-t border-slate-800/80 flex flex-wrap justify-center gap-6 text-xs text-slate-400">
+                <span class="flex items-center gap-1.5"><i class="fa-solid fa-check-circle text-emerald-400"></i> อธิบายเข้าใจง่าย</span>
+                <span class="flex items-center gap-1.5"><i class="fa-solid fa-code text-indigo-400"></i> โค้ดตัวอย่างพร้อมรัน</span>
+                <span class="flex items-center gap-1.5"><i class="fa-solid fa-clipboard-question text-purple-400"></i> ควิซทดสอบหลังเรียน</span>
+            </div>
+        </div>
+
+        <!-- VIEW 2: LOADING SPINNER -->
+        <div id="view-loading" class="hidden flex-col items-center justify-center py-20 space-y-6">
+            <div class="relative w-20 h-20">
+                <div class="absolute inset-0 border-4 border-indigo-500/20 rounded-full"></div>
+                <div class="absolute inset-0 border-4 border-indigo-500 rounded-full animate-spin border-t-transparent"></div>
+                <div class="absolute inset-0 flex items-center justify-center">
+                    <i class="fa-solid fa-code text-indigo-400 text-2xl animate-pulse"></i>
+                </div>
+            </div>
+            <div class="text-center space-y-2">
+                <h3 id="loading-text" class="text-xl font-bold text-white">กำลังสุ่มและเตรียมบทเรียน...</h3>
+                <p class="text-slate-400 text-xs">ระบบกำลังคัดสรรภาษาและโจทย์ที่ดีที่สุดให้คุณ</p>
+            </div>
+        </div>
+
+        <!-- VIEW 3: LESSON VIEW -->
+        <div id="view-lesson" class="hidden space-y-6 animate-fade-in">
+            <!-- Lesson Header Badge -->
+            <div class="flex flex-wrap items-center justify-between gap-4 bg-slate-800/60 p-4 rounded-2xl border border-slate-700/60">
+                <div class="flex items-center space-x-3">
+                    <span id="lesson-lang-badge" class="bg-indigo-500/20 border border-indigo-500/40 text-indigo-300 px-3 py-1 rounded-lg text-xs font-semibold uppercase tracking-wider">Python</span>
+                    <h3 id="lesson-title" class="text-lg sm:text-xl font-bold text-white">หัวข้อการเรียน</h3>
+                </div>
+                <button onclick="app.goHome()" class="text-slate-400 hover:text-white text-xs px-3 py-1.5 rounded-lg bg-slate-700/50 hover:bg-slate-700 transition-colors">
+                    <i class="fa-solid fa-xmark mr-1"></i> เลือกใหม่
+                </button>
+            </div>
+
+            <!-- Study Progress Bar -->
+            <div class="bg-slate-800/80 border border-slate-700/80 rounded-2xl p-4 sm:p-5 space-y-2.5">
+                <div class="flex items-center justify-between text-xs font-semibold">
+                    <span class="text-indigo-300 flex items-center gap-1.5">
+                        <i class="fa-solid fa-chalkboard-user"></i> อาจารย์พาเขียนโค้ด (ฝึกเขียนให้ครบทุกขั้นก่อนทำแบบทดสอบ)
+                    </span>
+                    <span id="study-progress-text" class="text-slate-300">ขั้นที่ 1 / 3</span>
+                </div>
+                <div class="w-full bg-slate-900 rounded-full h-2.5 overflow-hidden border border-slate-700/50">
+                    <div id="study-progress-bar" class="bg-gradient-to-r from-indigo-500 to-emerald-400 h-2.5 rounded-full transition-all duration-500" style="width: 0%"></div>
+                </div>
+            </div>
+
+            <!-- Interactive Guided Teacher Card -->
+            <div class="bg-slate-800/90 border border-slate-700 rounded-2xl p-6 sm:p-8 space-y-6 shadow-xl">
+                <!-- Teacher Dialogue Box -->
+                <div class="flex items-start gap-4 bg-indigo-950/50 border border-indigo-500/30 p-4 sm:p-5 rounded-2xl">
+                    <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shrink-0 shadow-lg shadow-indigo-500/20">
+                        <i class="fa-solid fa-user-tie text-white text-xl"></i>
+                    </div>
+                    <div class="space-y-1.5 flex-grow">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-bold text-indigo-300 uppercase tracking-wider">อาจารย์โค้ด (Instructor)</span>
+                            <span id="step-badge" class="text-[11px] bg-indigo-500/20 text-indigo-200 px-2.5 py-0.5 rounded-full border border-indigo-400/30">สเต็ปที่ 1</span>
+                        </div>
+                        <p id="teacher-speech" class="text-slate-200 text-sm sm:text-base leading-relaxed">สวัสดีครับนักเรียน! วันนี้เราจะมาลองเขียนเรื่องนี้กัน...</p>
+                    </div>
+                </div>
+
+                <!-- Step-by-step Instruction & Code Practice Area -->
+                <div class="space-y-4">
+                    <div class="bg-slate-900/70 border border-slate-700/80 rounded-xl p-4 space-y-2">
+                        <h4 class="text-xs font-bold text-amber-400 uppercase tracking-wider flex items-center gap-1.5">
+                            <i class="fa-solid fa-hand-point-right"></i> คำแนะนำจากอาจารย์ให้ลองพิมพ์ตาม:
+                        </h4>
+                        <p id="step-instruction" class="text-slate-300 text-sm leading-relaxed">คำสั่งแนะนำ...</p>
+                        <div class="pt-1">
+                            <span class="text-[11px] text-slate-400 block mb-1">ตัวอย่างโครงสร้างที่อาจารย์แนะนำ:</span>
+                            <pre id="step-hint-code" class="bg-slate-950 text-indigo-300 text-xs p-3 rounded-lg border border-slate-800 overflow-x-auto"><code>// ตัวอย่าง</code></pre>
+                        </div>
+                    </div>
+
+                    <!-- Student Interactive Code Editor -->
+                    <div class="space-y-2">
+                        <div class="flex items-center justify-between">
+                            <label for="student-code-input" class="text-xs font-bold text-emerald-400 uppercase tracking-wider flex items-center gap-1.5">
+                                <i class="fa-solid fa-terminal"></i> พื้นที่ฝึกเขียนโค้ดของคุณ:
+                            </label>
+                            <button onclick="app.autoFillStepCode()" class="text-xs text-slate-400 hover:text-indigo-300 transition-colors flex items-center gap-1">
+                                <i class="fa-solid fa-wand-sparkles"></i> ให้ช่วยเติมโค้ดขั้นนี้
+                            </button>
+                        </div>
+                        <textarea id="student-code-input" rows="6" spellcheck="false" placeholder="พิมพ์โค้ดตามที่อาจารย์แนะนำตรงนี้ได้เลยครับ..." class="w-full bg-slate-950 text-emerald-400 font-mono text-xs sm:text-sm p-4 rounded-xl border border-slate-700 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 outline-none leading-relaxed"></textarea>
+                    </div>
+
+                    <!-- Teacher Feedback Box -->
+                    <div id="teacher-feedback" class="hidden p-4 rounded-xl border text-xs sm:text-sm space-y-3">
+                        <div class="flex items-start gap-2.5">
+                            <i id="teacher-feedback-icon" class="fa-solid fa-circle-info mt-0.5"></i>
+                            <span id="teacher-feedback-text" class="font-medium">ข้อความตรวจโค้ด</span>
+                        </div>
+                        <div id="teacher-code-explanation-box" class="hidden pt-2.5 border-t border-emerald-500/30 space-y-1.5">
+                            <div class="text-xs font-bold text-emerald-300 flex items-center gap-1.5">
+                                <i class="fa-solid fa-book-open-reader"></i> อาจารย์อธิบายโค้ดที่คุณเพิ่งเขียน:
+                            </div>
+                            <p id="teacher-code-explanation-text" class="text-slate-200 text-xs sm:text-sm leading-relaxed pl-5"></p>
+                        </div>
+                    </div>
+
+                    <!-- Check Step Button -->
+                    <div class="flex flex-wrap items-center justify-between gap-3 pt-2">
+                        <div id="completed-steps-badges" class="flex items-center gap-2 text-xs text-slate-400">
+                            <!-- Step indicators -->
+                        </div>
+                        <div class="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+                            <button id="btn-check-code" onclick="app.checkStudentCode()" class="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-500 text-white font-semibold px-5 py-2.5 rounded-xl shadow-lg shadow-indigo-900/30 flex items-center justify-center gap-2 transition-all text-sm">
+                                <i class="fa-solid fa-check-double"></i>
+                                <span>ส่งให้อาจารย์ตรวจโค้ดขั้นนี้</span>
+                            </button>
+                            <button id="btn-next-step" onclick="app.goToNextStep()" class="hidden w-full sm:w-auto bg-emerald-600 hover:bg-emerald-500 text-white font-semibold px-5 py-2.5 rounded-xl shadow-lg shadow-emerald-900/30 flex items-center justify-center gap-2 transition-all text-sm">
+                                <span>เข้าใจแล้ว ไปสเต็ปถัดไป</span>
+                                <i class="fa-solid fa-arrow-right"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quiz Unlock Action -->
+                <div class="pt-4 border-t border-slate-700/60 flex flex-col sm:flex-row items-center justify-between gap-4">
+                    <p id="quiz-lock-hint" class="text-xs text-amber-300/90 flex items-center gap-1.5">
+                        <i class="fa-solid fa-lock"></i> ฝึกเขียนโค้ดตามอาจารย์ให้ครบทั้ง 3 สเต็ป เพื่อปลดล็อกแบบทดสอบ
+                    </p>
+                    <button id="btn-start-quiz" disabled onclick="app.startQuiz()" class="w-full sm:w-auto bg-slate-700 text-slate-400 cursor-not-allowed font-semibold px-6 py-3 rounded-xl flex items-center justify-center gap-2 transition-all text-sm">
+                        <i id="btn-start-quiz-icon" class="fa-solid fa-lock"></i>
+                        <span>เริ่มทำแบบทดสอบหลังเรียน</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- VIEW 4: QUIZ VIEW -->
+        <div id="view-quiz" class="hidden space-y-6 animate-fade-in max-w-2xl mx-auto w-full">
+            <!-- Quiz Progress -->
+            <div class="flex items-center justify-between text-xs text-slate-400 font-medium">
+                <span>คำถามที่ <span id="current-q-num">1</span> จาก <span id="total-q-num">3</span></span>
+                <span id="quiz-lang-tag" class="bg-purple-500/20 text-purple-300 px-2.5 py-0.5 rounded border border-purple-500/30">Python Quiz</span>
+            </div>
+
+            <!-- Quiz Card -->
+            <div class="bg-slate-800/90 border border-slate-700 rounded-2xl p-6 sm:p-8 space-y-6 shadow-xl">
+                <h3 id="quiz-question" class="text-base sm:text-lg font-bold text-white leading-snug">โจทย์คำถาม...</h3>
+
+                <div id="quiz-options" class="space-y-3">
+                    <!-- Options populated by JS -->
+                </div>
+
+                <!-- Explanation Box (Hidden initially) -->
+                <div id="quiz-explanation-box" class="hidden p-4 rounded-xl border text-xs sm:text-sm space-y-1">
+                    <div id="quiz-result-title" class="font-bold flex items-center gap-2"></div>
+                    <p id="quiz-explanation-text" class="text-slate-300"></p>
+                </div>
+
+                <div class="pt-2 flex justify-end">
+                    <button id="btn-next-quiz" onclick="app.nextQuizStep()" class="hidden bg-indigo-600 hover:bg-indigo-500 text-white font-semibold px-6 py-2.5 rounded-xl shadow-lg shadow-indigo-900/30 transition-all text-sm">
+                        ข้อถัดไป <i class="fa-solid fa-arrow-right ml-1"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- VIEW 5: RESULT VIEW -->
+        <div id="view-result" class="hidden space-y-6 animate-fade-in max-w-xl mx-auto text-center">
+            <div class="bg-slate-800/90 border border-slate-700 rounded-2xl p-8 space-y-6 shadow-2xl">
+                <div id="result-icon-wrap" class="w-20 h-20 mx-auto rounded-full flex items-center justify-center text-3xl shadow-lg">
+                    <i id="result-icon" class="fa-solid fa-trophy text-amber-400"></i>
+                </div>
+                
+                <div class="space-y-2">
+                    <h3 class="text-2xl font-bold text-white" id="result-title">ยอดเยี่ยมมาก!</h3>
+                    <p class="text-slate-300 text-sm" id="result-subtitle">คุณทำแบบทดสอบผ่านเรียบร้อยแล้ว</p>
+                </div>
+
+                <div class="bg-slate-900/60 border border-slate-800 rounded-xl p-4 flex justify-around items-center">
+                    <div>
+                        <div class="text-xs text-slate-400">คะแนนของคุณ</div>
+                        <div class="text-2xl font-black text-indigo-400"><span id="score-val">3</span>/<span id="score-total">3</span></div>
+                    </div>
+                    <div class="h-8 w-px bg-slate-800"></div>
+                    <div>
+                        <div class="text-xs text-slate-400">สถานะ</div>
+                        <div class="text-sm font-bold text-emerald-400" id="result-status">ผ่านเกณฑ์ 🌟</div>
+                    </div>
+                </div>
+
+                <div class="flex flex-col sm:flex-row gap-3 pt-4">
+                    <button onclick="app.goHome()" class="flex-1 bg-slate-700 hover:bg-slate-600 text-white font-semibold py-3 rounded-xl transition-all text-sm">
+                        <i class="fa-solid fa-house mr-1"></i> กลับหน้าแรก
+                    </button>
+                    <button onclick="app.repeatLesson()" class="flex-1 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold py-3 rounded-xl shadow-lg shadow-indigo-900/30 transition-all text-sm">
+                        <i class="fa-solid fa-rotate-right mr-1"></i> สุ่มหัวข้อใหม่
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- VIEW 6: QUICK CODING TEST -->
+        <div id="view-speed" class="hidden space-y-6 animate-fade-in max-w-3xl mx-auto w-full">
+            <div class="flex flex-wrap items-center justify-between gap-4 bg-slate-800/60 p-4 rounded-2xl border border-slate-700/60">
+                <div class="flex items-center gap-3">
+                    <span id="speed-language-badge" class="bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 px-3 py-1 rounded-lg text-xs font-semibold uppercase tracking-wider">Python</span>
+                    <h3 class="text-lg sm:text-xl font-bold text-white">ทดสอบเขียนโค้ดเร็ว</h3>
+                </div>
+                <div class="flex items-center gap-3">
+                    <span class="text-xs text-slate-400">เวลาที่เหลือ</span>
+                    <span id="speed-timer" class="text-xl font-black text-emerald-300 tabular-nums">01:00</span>
+                    <button onclick="app.goHome()" class="text-slate-400 hover:text-white text-xs px-3 py-1.5 rounded-lg bg-slate-700/50 hover:bg-slate-700 transition-colors">
+                        <i class="fa-solid fa-xmark mr-1"></i> ออก
+                    </button>
+                </div>
+            </div>
+
+            <div class="bg-slate-800/90 border border-slate-700 rounded-2xl p-6 sm:p-8 space-y-5 shadow-xl">
+                <div class="space-y-2">
+                    <span class="text-xs font-bold text-amber-400 uppercase tracking-wider flex items-center gap-1.5">
+                        <i class="fa-solid fa-book-open"></i> หัวข้อที่สุ่มได้
+                    </span>
+                    <p id="speed-prompt" class="text-slate-200 text-sm sm:text-base leading-relaxed"></p>
+                </div>
+
+                <div class="space-y-2">
+                    <span class="text-xs font-bold text-indigo-300 uppercase tracking-wider flex items-center gap-1.5">
+                        <i class="fa-solid fa-gamepad"></i> พิมพ์ถูก ตัวละครจะเดินหน้าไปสู้สไลม์
+                    </span>
+                    <div class="relative h-28 overflow-hidden rounded-xl border border-slate-700 bg-gradient-to-b from-sky-950 via-indigo-950 to-slate-900" role="img" aria-label="มินิเกมตัวละครเดินหน้าไปต่อสู้กับสไลม์">
+                        <div class="absolute bottom-5 left-0 right-0 h-1 bg-emerald-500/60"></div>
+                        <span id="speed-player" class="absolute bottom-5 left-[8%] text-3xl transition-[left] duration-200" aria-label="ตัวละคร">🧙</span>
+                        <span id="speed-slime" class="absolute bottom-5 right-[8%] text-3xl transition-opacity" aria-label="สไลม์">🟢</span>
+                    </div>
+                    <div class="flex items-center justify-between gap-3">
+                        <span id="speed-progress-text" class="text-[11px] text-slate-400">พิมพ์ตรง 0 ตัวอักษร</span>
+                        <div class="w-2/3 h-2 bg-slate-900 rounded-full overflow-hidden">
+                            <div id="speed-progress-bar" class="h-full w-0 bg-gradient-to-r from-emerald-500 to-amber-400 transition-all duration-200"></div>
+                        </div>
+                    </div>
+                    <p id="speed-typing-hint" class="text-[11px] text-slate-500">พิมพ์ตามตัวอย่างด้านล่าง ตัวละครจะกระโดดไปข้างหน้าทีละส่วน</p>
+                </div>
+
+                <div class="space-y-2">
+                    <span class="text-xs font-bold text-indigo-300 uppercase tracking-wider flex items-center gap-1.5">
+                        <i class="fa-solid fa-code"></i> ตัวอย่างโค้ดที่ต้องพิมพ์ตาม
+                    </span>
+                    <pre class="bg-slate-950 text-indigo-300 text-xs sm:text-sm p-4 rounded-xl border border-slate-800 overflow-x-auto"><code id="speed-sample-code"></code></pre>
+                </div>
+
+                <div class="space-y-2">
+                    <label for="speed-code-input" class="text-xs font-bold text-emerald-400 uppercase tracking-wider flex items-center gap-1.5">
+                        <i class="fa-solid fa-terminal"></i> พิมพ์โค้ดให้ตรงกับตัวอย่าง ภายใน 60 วินาที
+                    </label>
+                    <textarea id="speed-code-input" rows="9" spellcheck="false" placeholder="เริ่มพิมพ์โค้ดตามตัวอย่างตรงนี้..." class="w-full bg-slate-950 text-emerald-400 font-mono text-xs sm:text-sm p-4 rounded-xl border border-slate-700 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 outline-none leading-relaxed"></textarea>
+                    <div class="flex flex-wrap items-center justify-between gap-1 text-[11px] text-slate-500">
+                        <span>ระบบตรวจว่าพิมพ์ตรงกับตัวอย่าง ไม่ได้รันโค้ด</span>
+                        <span>พิมพ์คำอังกฤษแล้วกด Tab/Enter เพื่อเติมคำแนะนำ</span>
+                    </div>
+                    <div id="speed-completion-panel" class="hidden rounded-lg border border-indigo-500/40 bg-slate-900 shadow-xl">
+                        <div class="px-3 py-1.5 border-b border-slate-700 text-[10px] text-slate-400">คำแนะนำสำหรับ <span id="speed-completion-language"></span></div>
+                        <div id="speed-completion-list" class="max-h-36 overflow-y-auto p-1" role="listbox" aria-label="คำแนะนำโค้ด"></div>
+                        <div class="px-3 py-1 border-t border-slate-700 text-[10px] text-slate-500">↑ ↓ เลือก · Tab/Enter เติมคำ · Esc ปิด</div>
+                    </div>
+                </div>
+
+                <div id="speed-feedback" class="hidden p-4 rounded-xl border text-sm space-y-3">
+                    <p id="speed-feedback-text" class="font-semibold"></p>
+                </div>
+
+                <div class="flex flex-wrap justify-end gap-2">
+                    <button id="btn-repeat-speed" onclick="app.startQuickTest()" class="hidden bg-indigo-600 hover:bg-indigo-500 text-white font-semibold px-5 py-2.5 rounded-xl transition-all text-sm">
+                        <i class="fa-solid fa-rotate-right mr-1"></i> สุ่มตัวอย่างใหม่
+                    </button>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="border-t border-slate-800/80 py-4 text-center text-xs text-slate-500">
+        CodeQuest Roulette System &bull; พัฒนาเพื่อการเรียนรู้การเขียนโค้ดอย่างสนุกสนาน
+    </footer>
+
+    <!-- Notification Toast -->
+    <div id="toast" class="fixed bottom-6 right-6 bg-slate-800 text-white text-xs px-4 py-3 rounded-xl border border-slate-700 shadow-2xl flex items-center space-x-2 translate-y-20 opacity-0 transition-all duration-300 z-50">
+        <i id="toast-icon" class="fa-solid fa-circle-check text-emerald-400"></i>
+        <span id="toast-msg">ข้อความแจ้งเตือน</span>
+    </div>
+
+    <!-- Application Script -->
+    <script>
+        // Offline Dataset Fallback (With Guided Teacher Steps)
+        const offlineDatabase = [
+            {
+                language: "Python",
+                topic: "การใช้ List Comprehension เบื้องต้น",
+                teacherIntro: "สวัสดีครับ! วันนี้อาจารย์จะพาเขียน List Comprehension ใน Python เพื่อสร้างลิสต์ของเลขยกกำลังสองแบบสั้นๆ กระชับในบรรทัดเดียวครับ",
+                guidedSteps: [
+                    {
+                        teacherSpeech: "ขั้นแรก เรามาสร้าง List ตั้งต้นหรือกำหนดช่วงตัวเลขด้วย range() กันก่อนครับ ลองพิมพ์โค้ดสร้างลิสต์เลข 1 ถึง 5 ดูนะ",
+                        instruction: "ประกาศตัวแปร numbers = [1, 2, 3, 4, 5] เพื่อเตรียมข้อมูลสำหรับคำนวณ",
+                        hintCode: "numbers = [1, 2, 3, 4, 5]",
+                        requiredKeywords: ["numbers", "[", "]"],
+                        successMsg: "เยี่ยมมากครับ! เรามีข้อมูลตั้งต้นพร้อมแล้ว",
+                        codeExplanation: "บรรทัด `numbers = [1, 2, 3, 4, 5]` คือการสร้างตัวแปรชนิด List (โครงสร้างข้อมูลแบบลำดับใน Python) ชื่อ `numbers` เพื่อเก็บตัวเลขจำนวนเต็ม 5 ตัวไว้ใช้งานต่อในขั้นถัดไปครับ"
+                    },
+                    {
+                        teacherSpeech: "ทีนี้เรามาเขียนหัวใจสำคัญของ List Comprehension กันครับ โครงสร้างคือ [สูตรคำนวณ for ตัวแปร in ลิสต์]",
+                        instruction: "เพิ่มบรรทัดสร้างตัวแปร squares โดยใช้รูปแบบ [x**2 for x in numbers]",
+                        hintCode: "numbers = [1, 2, 3, 4, 5]\nsquares = [x**2 for x in numbers]",
+                        requiredKeywords: ["for", "in", "squares"],
+                        successMsg: "สุดยอด! เขียนโครงสร้าง List Comprehension ได้ถูกต้องเป๊ะเลยครับ",
+                        codeExplanation: "โค้ด `[x**2 for x in numbers]` ทำงานโดยวนหยิบสมาชิกแต่ละตัวใน `numbers` มาเก็บไว้ในตัวแปรชั่วคราว `x` ทีละตัว จากนั้นนำ `x` มายกกำลังสอง (`x**2`) แล้วรวบรวมผลลัพธ์ทั้งหมดสร้างเป็น List ใหม่ชื่อ `squares` อัตโนมัติครับ"
+                    },
+                    {
+                        teacherSpeech: "ขั้นตอนสุดท้าย ลองสั่งแสดงผลลัพธ์ออกทางหน้าจอเพื่อตรวจสอบว่าโค้ดของเราทำงานได้จริงครับ",
+                        instruction: "ใช้คำสั่ง print(squares) ต่อท้ายเพื่อแสดงผลลัพธ์",
+                        hintCode: "numbers = [1, 2, 3, 4, 5]\nsquares = [x**2 for x in numbers]\nprint(squares)",
+                        requiredKeywords: ["print", "squares"],
+                        successMsg: "เก่งมากครับนักเรียน! คุณเขียน List Comprehension สำเร็จแล้ว",
+                        codeExplanation: "ฟังก์ชัน `print(squares)` คือคำสั่งแสดงค่าของตัวแปร `squares` ออกทางหน้าจอคอนโซล ซึ่งจะได้ผลลัพธ์เป็นลิสต์ใหม่ `[1, 4, 9, 16, 25]` ครับ"
+                    }
+                ],
+                quiz: [
+                    {
+                        question: "ข้อใดคือ syntax ที่ถูกต้องของ List Comprehension ใน Python?",
+                        options: [
+                            "[item for item in iterable]",
+                            "(item for item in iterable)",
+                            "{item: item for item in iterable}",
+                            "for item in iterable: [item]"
+                        ],
+                        correctAnswer: 0,
+                        explanation: "List Comprehension ใช้เครื่องหมายวงเล็บเหลี่ยม `[...]` เสมอ โดยมีโครงสร้าง `[expression for item in iterable]`"
+                    },
+                    {
+                        question: "โค้ด [x for x in range(5) if x % 2 == 0] จะให้ผลลัพธ์เป็นอะไร?",
+                        options: [
+                            "[1, 3, 5]",
+                            "[0, 2, 4]",
+                            "[0, 1, 2, 3, 4]",
+                            "[2, 4]"
+                        ],
+                        correctAnswer: 1,
+                        explanation: "เงื่อนไข `if x % 2 == 0` จะคัดเฉพาะเลขคู่จากช่วง 0 ถึง 4 ได้แก่ 0, 2, 4"
+                    },
+                    {
+                        question: "ข้อดีหลักของ List Comprehension คืออะไร?",
+                        options: [
+                            "ทำงานเร็วกว่าและเขียนโค้ดสั้นกระชับขึ้น",
+                            "ใช้หน่วยความจำน้อยกว่าทุกกรณี",
+                            "จำเป็นต้องใช้แทน Loop เสมอใน Python 3",
+                            "ไม่มีข้อดีพิเศษ เป็นแค่ทางเลือก"
+                        ],
+                        correctAnswer: 0,
+                        explanation: "List Comprehension ช่วยให้โค้ดอ่านง่าย กระชับ และมักจะทำงานได้เร็วกว่าการใช้ for loop ปกติร่วมกับ append()"
+                    }
+                ]
+            },
+            {
+                language: "JavaScript",
+                topic: "Async / Await และการจัดการ Promise",
+                teacherIntro: "สวัสดีครับ! วันนี้อาจารย์จะสอนวิธีเขียนฟังก์ชันดึงข้อมูลจาก API แบบสมัยใหม่ด้วย Async / Await ที่อ่านง่ายไม่ปวดหัวครับ",
+                guidedSteps: [
+                    {
+                        teacherSpeech: "เริ่มแรก ถ้าเราต้องการใช้ await ข้างในฟังก์ชัน เราต้องบอก JavaScript ก่อนว่าฟังก์ชันนี้ทำงานแบบ Asynchronous ครับ",
+                        instruction: "ประกาศฟังก์ชันชื่อ getData โดยมีคำว่า async นำหน้า",
+                        hintCode: "async function getData() {\n  \n}",
+                        requiredKeywords: ["async", "function", "getData"],
+                        successMsg: "ถูกต้องครับ! การใส่ async นำหน้าเป็นการเปิดใช้งานโหมดรอผลลัพธ์แบบไม่บล็อกการทำงาน",
+                        codeExplanation: "คีย์เวิร์ด `async` ที่วางหน้า `function getData()` เป็นการบอก JavaScript ว่าฟังก์ชันนี้จะทำงานแบบอะซิงโครนัส (ไม่ต้องรอให้เสร็จก่อนค่อยทำอย่างอื่น) และอนุญาตให้ใช้คำสั่ง `await` ภายในปีกกา `{ ... }` ของฟังก์ชันนี้ได้ครับ"
+                    },
+                    {
+                        teacherSpeech: "ต่อไป เวลาเรียก API จริงอาจเกิดข้อผิดพลาดได้ อาจารย์แนะนำให้ครอบด้วย try...catch และใช้ await เพื่อรอข้อมูลครับ",
+                        instruction: "เพิ่มบล็อก try { const res = await fetch('/api'); } catch (err) { console.error(err); } ข้างในฟังก์ชัน",
+                        hintCode: "async function getData() {\n  try {\n    const res = await fetch('/api');\n  } catch (err) {\n    console.error(err);\n  }\n}",
+                        requiredKeywords: ["try", "await", "fetch", "catch"],
+                        successMsg: "ยอดเยี่ยมมากครับ! การใช้ try...catch คู่กับ await เป็นแนวปฏิบัติที่ดีมากๆ",
+                        codeExplanation: "`fetch('/api')` ใช้ส่งคำขอไปดึงข้อมูลจากเซิร์ฟเวอร์ โดย `await` จะสั่งให้หยุดรอจนกว่าจะได้ข้อมูลกลับมาแล้วเก็บใน `res` ส่วน `try...catch` ทำหน้าที่เป็นเกราะป้องกัน หากเน็ตหลุดหรือ API ล่ม โค้ดจะกระโดดไปทำงานใน `catch` เพื่อแจ้งเตือนแทนที่จะทำให้โปรแกรมพังครับ"
+                    },
+                    {
+                        teacherSpeech: "สุดท้ายอย่าลืมเรียกใช้งานฟังก์ชันที่เราสร้างขึ้นมานะครับ ไม่อย่างนั้นโค้ดจะยังไม่ทำงาน",
+                        instruction: "เรียกใช้งานฟังก์ชัน getData(); ที่บรรทัดล่างสุด",
+                        hintCode: "async function getData() {\n  try {\n    const res = await fetch('/api');\n  } catch (err) {\n    console.error(err);\n  }\n}\ngetData();",
+                        requiredKeywords: ["getData()"],
+                        successMsg: "เยี่ยมยอดครับ! คุณเขียนโค้ด Async/Await ครบสมบูรณ์แล้ว",
+                        codeExplanation: "การเขียนชื่อฟังก์ชันตามด้วยวงเล็บ `getData();` คือการสั่ง Invoke (เรียกใช้งาน) ฟังก์ชันที่เราประกาศไว้ด้านบนให้เริ่มทำงานจริงครับ"
+                    }
+                ],
+                quiz: [
+                    {
+                        question: "คำสั่ง 'await' สามารถใช้งานได้ภายใต้ฟังก์ชันประเภทใดเท่านั้น?",
+                        options: [
+                            "ทุกฟังก์ชันใน JavaScript",
+                            "เฉพาะฟังก์ชันที่ประกาศเป็น async function เท่านั้น",
+                            "เฉพาะ Arrow function",
+                            "เฉพาะฟังก์ชันที่รันบน Node.js"
+                        ],
+                        correctAnswer: 1,
+                        explanation: "`await` จะใช้งานได้เฉพาะข้างในฟังก์ชันที่มีคีย์เวิร์ด `async` นำหน้าเท่านั้น"
+                    },
+                    {
+                        question: "บล็อกคำสั่งใดใช้สำหรับดักจับข้อผิดพลาด (Error) เมื่อการทำงานของ Promise ล้มเหลว?",
+                        options: [
+                            "if / else",
+                            "try / catch",
+                            "switch / case",
+                            "throw / break"
+                        ],
+                        correctAnswer: 1,
+                        explanation: "เราใช้ `try { ... } catch (error) { ... }` เพื่อจัดการข้อผิดพลาดเมื่อเกิด error ใน async/await"
+                    },
+                    {
+                        question: "Async/Await ถูกพัฒนาขึ้นมาเพื่อแก้ไขปัญหาอะไรใน JavaScript?",
+                        options: [
+                            "Callback Hell (Pyramid of Doom)",
+                            "ความเร็วในการคอมไพล์โค้ด",
+                            "ขนาดไฟล์ของโปรแกรม",
+                            "ปัญหาการประกาศตัวแปรซ้ำ"
+                        ],
+                        correctAnswer: 0,
+                        explanation: "Async/Await ช่วยให้อ่านโค้ดง่ายขึ้น แทนการซ้อน callback หลายชั้น (Callback Hell)"
+                    }
+                ]
+            },
+            {
+                language: "HTML / CSS",
+                topic: "CSS Flexbox สำหรับจัด Layout กึ่งกลาง",
+                teacherIntro: "สวัสดีครับ! ปัญหาคลาสสิกของคนทำเว็บคือการจัดของให้อยู่กึ่งกลางหน้าจอ วันนี้อาจารย์จะพาเขียน CSS Flexbox จัดกึ่งกลางแบบมือโปรครับ",
+                guidedSteps: [
+                    {
+                        teacherSpeech: "ขั้นแรก เราต้องเปลี่ยนกล่องธรรมดาให้กลายเป็นกล่องยืดหยุ่น (Flex Container) ก่อนครับ",
+                        instruction: "สร้างคลาส .box และกำหนด display: flex; ข้างใน",
+                        hintCode: ".box {\n  display: flex;\n}",
+                        requiredKeywords: [".box", "display", "flex"],
+                        successMsg: "ดีมากครับ! ตอนนี้ .box กลายเป็น Flex Container พร้อมจัดเรียงไอเทมแล้ว",
+                        codeExplanation: "`.box` คือ Class Selector ที่เลือกอิลิเมนต์ HTML ที่มีคลาส box ส่วน `display: flex;` คือการเปิดโหมด Flexbox ทำให้ลูกๆ ที่อยู่ข้างในกล่องนี้สามารถจัดตำแหน่งและยืดหดได้อย่างอิสระครับ"
+                    },
+                    {
+                        teacherSpeech: "ต่อไป เรามาจัดให้ไอเทมอยู่กึ่งกลางในแนวนอน (Main Axis) กันครับ",
+                        instruction: "เพิ่มคำสั่ง justify-content: center; เข้าไปใน .box",
+                        hintCode: ".box {\n  display: flex;\n  justify-content: center;\n}",
+                        requiredKeywords: ["justify-content", "center"],
+                        successMsg: "เป๊ะเลยครับ! justify-content: center จะดันไอเทมมาอยู่ตรงกลางแนวนอน",
+                        codeExplanation: "`justify-content: center;` ทำหน้าที่ควบคุมการจัดวางในแกนหลัก (Main Axis ซึ่งค่าเริ่มต้นคือแนวนอนซ้าย-ขวา) โดยดันเนื้อหาทั้งหมดภายใน `.box` ให้มารวมกันอยู่ตรงกึ่งกลางแนวนอนครับ"
+                    },
+                    {
+                        teacherSpeech: "สุดท้าย จัดให้ไอเทมอยู่กึ่งกลางในแนวตั้ง (Cross Axis) ด้วยอีกคำสั่งหนึ่งครับ",
+                        instruction: "เพิ่มคำสั่ง align-items: center; เข้าไปใน .box",
+                        hintCode: ".box {\n  display: flex;\n  justify-content: center;\n  align-items: center;\n}",
+                        requiredKeywords: ["align-items", "center"],
+                        successMsg: "สมบูรณ์แบบครับ! ตอนนี้ไอเทมของคุณอยู่กึ่งกลางเป๊ะทั้งแนวตั้งและแนวนอนแล้ว",
+                        codeExplanation: "`align-items: center;` ใช้ควบคุมการจัดวางในแกนขวาง (Cross Axis คือแนวตั้งบน-ล่าง) เมื่อใช้คู่กับ `justify-content: center;` จึงทำให้ไอเทมอยู่กึ่งกลางกล่องพอดีทั้ง 2 แกนครับ"
+                    }
+                ],
+                quiz: [
+                    {
+                        question: "ต้องการกำหนดให้กล่อง (Container) กลายเป็น Flex container ต้องใช้คำสั่งใด?",
+                        options: [
+                            "display: block;",
+                            "display: flex;",
+                            "flex-direction: row;",
+                            "position: relative;"
+                        ],
+                        correctAnswer: 1,
+                        explanation: "ต้องกำหนด `display: flex;` ให้กับ element แม่ (Container) ก่อนเสมอ"
+                    },
+                    {
+                        question: "คำสั่งใดใช้จัดตำแหน่งไอเทมในแนวแกนหลัก (Main Axis) ให้อยู่ชิดขอบซ้ายขวาแบบกระจายเท่าๆ กัน?",
+                        options: [
+                            "justify-content: space-between;",
+                            "align-items: center;",
+                            "justify-content: center;",
+                            "flex-wrap: wrap;"
+                        ],
+                        correctAnswer: 0,
+                        explanation: "`justify-content: space-between;` จะกระจายไอเทมให้มีระยะห่างเท่าๆ กันโดยชิดขอบซ้ายและขวา"
+                    },
+                    {
+                        question: "ถ้าต้องการจัดไอเทมในแนวแกนตั้ง (Cross Axis) ให้อยู่กึ่งกลาง ต้องใช้คุณสมบัติใด?",
+                        options: [
+                            "justify-content: center;",
+                            "align-items: center;",
+                            "align-content: stretch;",
+                            "flex-align: middle;"
+                        ],
+                        correctAnswer: 1,
+                        explanation: "`align-items: center;` ใช้จัดแนวแกนตั้ง (Cross Axis) ให้อยู่ตรงกลาง"
+                    }
+                ]
+            },
+            {
+                language: "Java",
+                topic: "การวนลูปและรวมค่าจาก Array",
+                teacherIntro: "วันนี้เราจะใช้ Array และ for-each loop ใน Java เพื่อรวมตัวเลขหลายค่าเข้าด้วยกัน",
+                guidedSteps: [
+                    {
+                        teacherSpeech: "เริ่มจากสร้าง Array สำหรับเก็บตัวเลขที่ต้องการคำนวณ",
+                        instruction: "ประกาศ int[] ชื่อ numbers และใส่ตัวเลข 1, 2, 3",
+                        hintCode: "int[] numbers = {1, 2, 3};",
+                        requiredKeywords: ["int[]", "numbers", "{1, 2, 3}"],
+                        successMsg: "ถูกต้องครับ เรามี Array เก็บตัวเลขพร้อมใช้งานแล้ว",
+                        codeExplanation: "`int[]` ใช้ประกาศ Array ของจำนวนเต็ม ส่วน `numbers` เป็นชื่อตัวแปรที่เก็บสมาชิกทั้งสามค่า"
+                    },
+                    {
+                        teacherSpeech: "ต่อไปเตรียมตัวแปรผลรวม แล้ววนอ่านสมาชิกทุกตัวใน Array",
+                        instruction: "กำหนด total = 0 และใช้ for-each บวก number เข้า total",
+                        hintCode: "int[] numbers = {1, 2, 3};\nint total = 0;\nfor (int number : numbers) {\n    total += number;\n}",
+                        requiredKeywords: ["for", "number", "total +="],
+                        successMsg: "เยี่ยมครับ ลูปจะบวกสมาชิกแต่ละตัวเข้า total",
+                        codeExplanation: "`for (int number : numbers)` วนอ่านตัวเลขใน Array ทีละตัว และ `total += number` เพิ่มค่าตัวนั้นเข้าไปในผลรวม"
+                    },
+                    {
+                        teacherSpeech: "ขั้นสุดท้ายแสดงผลรวมออกทางหน้าจอ",
+                        instruction: "เพิ่ม System.out.println(total) เพื่อแสดงผลลัพธ์",
+                        hintCode: "int[] numbers = {1, 2, 3};\nint total = 0;\nfor (int number : numbers) {\n    total += number;\n}\nSystem.out.println(total);",
+                        requiredKeywords: ["System.out.println", "total"],
+                        successMsg: "ครบแล้วครับ โปรแกรมจะแสดงผลรวมเป็น 6",
+                        codeExplanation: "`System.out.println(total)` แสดงค่าของตัวแปร `total` แล้วขึ้นบรรทัดใหม่"
+                    }
+                ],
+                quiz: [
+                    {
+                        question: "ชนิดข้อมูลใดใช้เก็บ Array ของจำนวนเต็มใน Java?",
+                        options: ["int[]", "string[]", "array<int>", "list"],
+                        correctAnswer: 0,
+                        explanation: "`int[]` คือรูปแบบประกาศ Array ที่เก็บค่าชนิด int"
+                    },
+                    {
+                        question: "for-each loop เหมาะกับงานแบบใด?",
+                        options: ["อ่านสมาชิกแต่ละตัวในชุดข้อมูล", "ประกาศคลาสใหม่", "หยุดโปรแกรม", "สร้างไฟล์"],
+                        correctAnswer: 0,
+                        explanation: "for-each ช่วยวนอ่านสมาชิกใน Array หรือ collection ทีละตัว"
+                    },
+                    {
+                        question: "ถ้า total เริ่มที่ 0 แล้วบวก 1, 2 และ 3 ค่าจะเป็นเท่าใด?",
+                        options: ["5", "6", "123", "3"],
+                        correctAnswer: 1,
+                        explanation: "ผลรวมคือ 0 + 1 + 2 + 3 = 6"
+                    }
+                ]
+            },
+            {
+                language: "C++",
+                topic: "เงื่อนไข if และการแสดงผล",
+                teacherIntro: "มาลองเขียนโปรแกรม C++ ที่ตรวจคะแนนด้วย if แล้วแสดงผลกันครับ",
+                guidedSteps: [
+                    {
+                        teacherSpeech: "เริ่มจากฟังก์ชัน main และกำหนดคะแนนตัวอย่าง",
+                        instruction: "เขียน include iostream, main และตัวแปร score",
+                        hintCode: "#include <iostream>\n\nint main() {\n    int score = 0;",
+                        requiredKeywords: ["#include", "int main", "score"],
+                        successMsg: "ดีมากครับ โปรแกรมมีจุดเริ่มต้นและตัวแปรคะแนนแล้ว",
+                        codeExplanation: "`#include <iostream>` เตรียมเครื่องมือรับส่งข้อมูล ส่วน `main` คือฟังก์ชันเริ่มต้นของโปรแกรม C++"
+                    },
+                    {
+                        teacherSpeech: "ใช้ if ตรวจว่าคะแนนถึง 10 หรือไม่",
+                        instruction: "เพิ่ม if (score >= 10) แล้วแสดงคำว่า Passed ด้วย std::cout",
+                        hintCode: "#include <iostream>\n\nint main() {\n    int score = 10;\n    if (score >= 10) {\n        std::cout << \"Passed\";\n    }",
+                        requiredKeywords: ["if", "score >=", "std::cout"],
+                        successMsg: "ถูกต้องครับ เงื่อนไขนี้จะแสดง Passed เมื่อคะแนนถึงเกณฑ์",
+                        codeExplanation: "`if` จะทำงานเมื่อเงื่อนไข `score >= 10` เป็นจริง และ `std::cout` ใช้ส่งข้อความออกทางหน้าจอ"
+                    },
+                    {
+                        teacherSpeech: "ปิดท้าย main ให้สมบูรณ์ด้วย return 0",
+                        instruction: "เพิ่ม return 0; และปีกกาปิดฟังก์ชัน",
+                        hintCode: "#include <iostream>\n\nint main() {\n    int score = 10;\n    if (score >= 10) {\n        std::cout << \"Passed\";\n    }\n    return 0;\n}",
+                        requiredKeywords: ["return 0", "}"],
+                        successMsg: "ยอดเยี่ยมครับ โปรแกรม C++ ตัวอย่างสมบูรณ์แล้ว",
+                        codeExplanation: "`return 0;` ส่งสถานะว่าจบโปรแกรมตามปกติ และ `}` ปิดขอบเขตของฟังก์ชัน main"
+                    }
+                ],
+                quiz: [
+                    {
+                        question: "ส่วนใดเป็นจุดเริ่มต้นการทำงานของโปรแกรม C++ ทั่วไป?",
+                        options: ["int main()", "start()", "begin()", "void run()"],
+                        correctAnswer: 0,
+                        explanation: "โปรแกรม C++ เริ่มทำงานจากฟังก์ชัน `main`"
+                    },
+                    {
+                        question: "ตัวดำเนินการ >= หมายถึงอะไร?",
+                        options: ["น้อยกว่า", "มากกว่าหรือเท่ากับ", "ไม่เท่ากับ", "กำหนดค่า"],
+                        correctAnswer: 1,
+                        explanation: "`>=` ใช้ตรวจว่าค่าทางซ้ายมากกว่าหรือเท่ากับค่าทางขวา"
+                    },
+                    {
+                        question: "คำสั่งใดใช้แสดงข้อความในตัวอย่างนี้?",
+                        options: ["std::cout", "std::cin", "return", "include"],
+                        correctAnswer: 0,
+                        explanation: "`std::cout` ใช้แสดงข้อมูลออกทางหน้าจอ"
+                    }
+                ]
+            },
+            {
+                language: "C#",
+                topic: "การวน foreach รวมคะแนน",
+                teacherIntro: "บทเรียนนี้จะใช้ Array และ foreach ใน C# เพื่อรวมคะแนนหลายรายการ",
+                guidedSteps: [
+                    {
+                        teacherSpeech: "เริ่มด้วย Array ที่เก็บคะแนนสามค่า",
+                        instruction: "ประกาศ int[] ชื่อ scores และใส่ค่า 10, 20, 30",
+                        hintCode: "int[] scores = { 10, 20, 30 };",
+                        requiredKeywords: ["int[]", "scores", "{ 10, 20, 30 }"],
+                        successMsg: "เยี่ยมครับ Array คะแนนพร้อมให้เราวนอ่านแล้ว",
+                        codeExplanation: "`int[]` ประกาศ Array ของจำนวนเต็ม และ `scores` เก็บคะแนนแต่ละรายการ"
+                    },
+                    {
+                        teacherSpeech: "สร้างตัวแปร total แล้วใช้ foreach อ่านคะแนนทีละตัว",
+                        instruction: "กำหนด total เป็น 0 และบวก score ใน foreach",
+                        hintCode: "int[] scores = { 10, 20, 30 };\nint total = 0;\nforeach (int score in scores)\n{\n    total += score;\n}",
+                        requiredKeywords: ["foreach", "score", "total +="],
+                        successMsg: "ถูกต้องครับ foreach จะวนครบทุกคะแนน",
+                        codeExplanation: "`foreach` นำสมาชิกใน `scores` มาเก็บใน `score` ทีละตัว จากนั้น `total += score` สะสมผลรวม"
+                    },
+                    {
+                        teacherSpeech: "แสดงผลรวมที่คำนวณได้ด้วย Console",
+                        instruction: "เพิ่ม Console.WriteLine(total) ต่อท้ายลูป",
+                        hintCode: "int[] scores = { 10, 20, 30 };\nint total = 0;\nforeach (int score in scores)\n{\n    total += score;\n}\nConsole.WriteLine(total);",
+                        requiredKeywords: ["Console.WriteLine", "total"],
+                        successMsg: "ครบถ้วนครับ ผลรวมคะแนนคือ 60",
+                        codeExplanation: "`Console.WriteLine(total)` แสดงผลรวมทางหน้าจอและขึ้นบรรทัดใหม่"
+                    }
+                ],
+                quiz: [
+                    {
+                        question: "คำสั่งใดใช้วนอ่านสมาชิกใน Array ของ C# ได้โดยตรง?",
+                        options: ["foreach", "repeat", "iterate", "loop each"],
+                        correctAnswer: 0,
+                        explanation: "`foreach` ใช้วนอ่านสมาชิกแต่ละตัวใน Array หรือ collection"
+                    },
+                    {
+                        question: "ผลรวมของ 10, 20 และ 30 คือเท่าใด?",
+                        options: ["50", "60", "30", "102030"],
+                        correctAnswer: 1,
+                        explanation: "10 + 20 + 30 เท่ากับ 60"
+                    },
+                    {
+                        question: "Console.WriteLine ทำหน้าที่อะไร?",
+                        options: ["แสดงข้อความหรือค่า", "วนลูป", "ประกาศ Array", "หยุดคอมไพเลอร์"],
+                        correctAnswer: 0,
+                        explanation: "`Console.WriteLine` เขียนข้อมูลไปยังหน้าจอคอนโซล"
+                    }
+                ]
+            },
+            {
+                language: "PHP",
+                topic: "ฟังก์ชันและการส่งค่ากลับ",
+                teacherIntro: "มาสร้างฟังก์ชัน PHP สำหรับทักทาย แล้วนำผลลัพธ์ไปแสดงกันครับ",
+                guidedSteps: [
+                    {
+                        teacherSpeech: "เริ่มจากเปิด PHP และกำหนดชื่อตัวแปร",
+                        instruction: "ใส่แท็กเปิด PHP แล้วกำหนด $name เป็น Mina",
+                        hintCode: "<?php\n$name = \"Mina\";",
+                        requiredKeywords: ["<?php", "$name", "="],
+                        successMsg: "ถูกต้องครับ ตัวแปร PHP ใช้เครื่องหมาย $ นำหน้า",
+                        codeExplanation: "`<?php` เริ่มส่วนโค้ด PHP และ `$name` เป็นตัวแปรที่เก็บข้อความ"
+                    },
+                    {
+                        teacherSpeech: "ต่อไปสร้างฟังก์ชันที่รับชื่อและคืนข้อความทักทาย",
+                        instruction: "เขียน function greet($name) และ return ข้อความที่ต่อกับชื่อ",
+                        hintCode: "<?php\n$name = \"Mina\";\nfunction greet($name) {\n    return \"Hello, \" . $name;\n}",
+                        requiredKeywords: ["function greet", "$name", "return"],
+                        successMsg: "ดีมากครับ ฟังก์ชันรับชื่อแล้วส่งข้อความกลับ",
+                        codeExplanation: "`function greet($name)` ประกาศฟังก์ชัน และ `return` ส่งข้อความที่นำมาต่อกันกลับไปยังผู้เรียก"
+                    },
+                    {
+                        teacherSpeech: "ขั้นสุดท้ายเรียกฟังก์ชันแล้วแสดงผลด้วย echo",
+                        instruction: "เพิ่ม echo greet($name); เพื่อแสดงคำทักทาย",
+                        hintCode: "<?php\n$name = \"Mina\";\nfunction greet($name) {\n    return \"Hello, \" . $name;\n}\necho greet($name);",
+                        requiredKeywords: ["echo", "greet($name)"],
+                        successMsg: "ยอดเยี่ยมครับ โค้ดจะแสดง Hello, Mina",
+                        codeExplanation: "`greet($name)` เรียกฟังก์ชันด้วยชื่อที่กำหนด ส่วน `echo` แสดงค่าที่ฟังก์ชันส่งกลับ"
+                    }
+                ],
+                quiz: [
+                    {
+                        question: "ตัวแปรใน PHP ต้องขึ้นต้นด้วยสัญลักษณ์ใด?",
+                        options: ["$", "#", "@", "&"],
+                        correctAnswer: 0,
+                        explanation: "ชื่อตัวแปร PHP ต้องขึ้นต้นด้วยเครื่องหมาย `$`"
+                    },
+                    {
+                        question: "คำสั่งใดใช้ส่งค่ากลับจากฟังก์ชัน?",
+                        options: ["return", "echo", "import", "print only"],
+                        correctAnswer: 0,
+                        explanation: "`return` ส่งค่าจากฟังก์ชันกลับไปยังจุดที่เรียกใช้"
+                    },
+                    {
+                        question: "คำสั่ง echo ใช้ทำอะไร?",
+                        options: ["แสดงผลข้อมูล", "ประกาศฟังก์ชัน", "สร้างตัวแปร", "วนซ้ำ"],
+                        correctAnswer: 0,
+                        explanation: "`echo` ใช้ส่งข้อความหรือค่าออกมาแสดงผล"
+                    }
+                ]
+            },
+            {
+                language: "SQL",
+                topic: "สร้างตาราง เพิ่มข้อมูล และค้นหาข้อมูล",
+                teacherIntro: "เราจะใช้ SQL สร้างตาราง เพิ่มข้อมูลตัวอย่าง และค้นหาชื่อจากตาราง",
+                guidedSteps: [
+                    {
+                        teacherSpeech: "เริ่มจากสร้างตาราง students ที่มีรหัสและชื่อ",
+                        instruction: "เขียน CREATE TABLE พร้อมคอลัมน์ id และ name",
+                        hintCode: "CREATE TABLE students (\n    id INT,\n    name VARCHAR(50)\n);",
+                        requiredKeywords: ["CREATE TABLE", "students", "VARCHAR"],
+                        successMsg: "ดีมากครับ ตาราง students มีคอลัมน์ที่จำเป็นแล้ว",
+                        codeExplanation: "`CREATE TABLE` สร้างตารางใหม่ โดย `INT` ใช้เก็บจำนวนเต็มและ `VARCHAR(50)` ใช้เก็บข้อความ"
+                    },
+                    {
+                        teacherSpeech: "เพิ่มแถวข้อมูลหนึ่งรายการด้วย INSERT INTO",
+                        instruction: "เพิ่ม id 1 และชื่อ Mina ลงใน students",
+                        hintCode: "CREATE TABLE students (\n    id INT,\n    name VARCHAR(50)\n);\nINSERT INTO students (id, name) VALUES (1, 'Mina');",
+                        requiredKeywords: ["INSERT INTO", "VALUES", "Mina"],
+                        successMsg: "เรียบร้อยครับ ข้อมูลถูกเพิ่มลงในตาราง",
+                        codeExplanation: "`INSERT INTO` ระบุตารางและคอลัมน์ ส่วน `VALUES` กำหนดค่าที่ต้องการบันทึก"
+                    },
+                    {
+                        teacherSpeech: "สุดท้ายดึงชื่อทั้งหมดออกมาด้วย SELECT",
+                        instruction: "เขียน SELECT name FROM students;",
+                        hintCode: "CREATE TABLE students (\n    id INT,\n    name VARCHAR(50)\n);\nINSERT INTO students (id, name) VALUES (1, 'Mina');\nSELECT name FROM students;",
+                        requiredKeywords: ["SELECT", "name", "FROM students"],
+                        successMsg: "เก่งมากครับ คำสั่ง SELECT ใช้ค้นหาชื่อจากตาราง",
+                        codeExplanation: "`SELECT name FROM students` เลือกคอลัมน์ `name` จากทุกแถวในตาราง `students`"
+                    }
+                ],
+                quiz: [
+                    {
+                        question: "คำสั่งใดใช้สร้างตารางใหม่?",
+                        options: ["CREATE TABLE", "ADD ROW", "MAKE DATABASE ROW", "NEW TABLE"],
+                        correctAnswer: 0,
+                        explanation: "`CREATE TABLE` ใช้กำหนดและสร้างตารางใหม่ในฐานข้อมูล"
+                    },
+                    {
+                        question: "ส่วนใดของ INSERT INTO ใช้ระบุค่าที่จะบันทึก?",
+                        options: ["VALUES", "WHERE", "ORDER BY", "GROUP"],
+                        correctAnswer: 0,
+                        explanation: "`VALUES` ระบุค่าที่จะใส่ในคอลัมน์ของแถวใหม่"
+                    },
+                    {
+                        question: "คำสั่งใดใช้เลือกข้อมูลจากตาราง?",
+                        options: ["SELECT", "INSERT", "UPDATE", "CREATE"],
+                        correctAnswer: 0,
+                        explanation: "`SELECT` ใช้ดึงข้อมูลจากตารางตามคอลัมน์ที่ระบุ"
+                    }
+                ]
+            },
+            {
+                language: "Go",
+                topic: "วนลูป for เพื่อรวมตัวเลข",
+                teacherIntro: "มาลองเขียน Go ใช้ for loop รวมตัวเลข แล้วพิมพ์ผลลัพธ์กันครับ",
+                guidedSteps: [
+                    {
+                        teacherSpeech: "เริ่มต้นโปรแกรม Go และเตรียมตัวแปรผลรวม",
+                        instruction: "ประกาศ package main, import fmt และกำหนด total := 0 ใน main",
+                        hintCode: "package main\n\nimport \"fmt\"\n\nfunc main() {\n    total := 0",
+                        requiredKeywords: ["package main", "import", "total :="],
+                        successMsg: "ดีมากครับ โปรแกรมพร้อมใช้ fmt และมีตัวแปร total แล้ว",
+                        codeExplanation: "`package main` กำหนดโปรแกรมที่รันได้ ส่วน `:=` ประกาศตัวแปรพร้อมให้ Go อนุมานชนิดข้อมูล"
+                    },
+                    {
+                        teacherSpeech: "ใช้ for วนอ่านตัวเลขและสะสมผลรวม",
+                        instruction: "วน range ผ่าน []int{1, 2, 3} แล้วบวก number เข้า total",
+                        hintCode: "package main\n\nimport \"fmt\"\n\nfunc main() {\n    total := 0\n    for _, number := range []int{1, 2, 3} {\n        total += number\n    }",
+                        requiredKeywords: ["for", "range", "total +="],
+                        successMsg: "ถูกต้องครับ for และ range ใช้วนผ่านสมาชิกของ slice",
+                        codeExplanation: "`range` ให้ค่าของสมาชิกทีละตัวใน `number` และ `total += number` สะสมค่าทั้งหมด"
+                    },
+                    {
+                        teacherSpeech: "ปิดท้ายด้วยการพิมพ์ผลรวม",
+                        instruction: "เพิ่ม fmt.Println(total) และปีกกาปิด main",
+                        hintCode: "package main\n\nimport \"fmt\"\n\nfunc main() {\n    total := 0\n    for _, number := range []int{1, 2, 3} {\n        total += number\n    }\n    fmt.Println(total)\n}",
+                        requiredKeywords: ["fmt.Println", "total"],
+                        successMsg: "ครบแล้วครับ โปรแกรมจะแสดงผลรวมเป็น 6",
+                        codeExplanation: "`fmt.Println(total)` แสดงค่าผลรวมทางหน้าจอและขึ้นบรรทัดใหม่"
+                    }
+                ],
+                quiz: [
+                    {
+                        question: "Go ใช้คำสั่งใดสำหรับวนซ้ำ?",
+                        options: ["for", "while", "repeat", "foreach"],
+                        correctAnswer: 0,
+                        explanation: "Go ใช้ `for` เป็นโครงสร้างวนซ้ำ"
+                    },
+                    {
+                        question: "range ใช้ทำอะไรในตัวอย่างนี้?",
+                        options: ["วนอ่านสมาชิกของ slice", "ประกาศฟังก์ชัน", "พิมพ์ข้อความ", "ติดตั้ง package"],
+                        correctAnswer: 0,
+                        explanation: "`range` ใช้วนอ่านสมาชิกของ slice หรือ collection"
+                    },
+                    {
+                        question: "fmt.Println ใช้ทำอะไร?",
+                        options: ["แสดงผล", "สร้างตัวแปร", "วนซ้ำ", "คืนค่าจากฟังก์ชัน"],
+                        correctAnswer: 0,
+                        explanation: "`fmt.Println` แสดงข้อมูลออกทางหน้าจอ"
+                    }
+                ]
+            }
+        ];
+
+        const quickCodingChallenges = [
+            {
+                language: "Python",
+                prompt: "List Comprehension: ยกกำลังสองตัวเลขในลิสต์",
+                sampleSolution: "numbers = [1, 2, 3]\nsquares = [x**2 for x in numbers]"
+            },
+            {
+                language: "Python",
+                prompt: "List Comprehension: กรองเลขคู่จากลิสต์",
+                sampleSolution: "numbers = [1, 2, 3, 4]\nevens = [x for x in numbers if x % 2 == 0]"
+            },
+            {
+                language: "JavaScript",
+                prompt: "Async/Await: ดึงข้อมูลด้วย fetch",
+                sampleSolution: "async function getData() {\n    const response = await fetch('/api');\n}"
+            },
+            {
+                language: "JavaScript",
+                prompt: "Async/Await: แปลงข้อมูลตอบกลับจาก fetch เป็น JSON",
+                sampleSolution: "async function getData() {\n    const response = await fetch('/api');\n    return response.json();\n}"
+            },
+            {
+                language: "HTML / CSS",
+                prompt: "CSS Flexbox: จัดเนื้อหาในกล่องให้อยู่กึ่งกลาง",
+                sampleSolution: ".box {\n    display: flex;\n    justify-content: center;\n    align-items: center;\n}"
+            },
+            {
+                language: "HTML / CSS",
+                prompt: "CSS Grid: จัดเนื้อหาเป็นสองคอลัมน์",
+                sampleSolution: ".grid {\n    display: grid;\n    grid-template-columns: repeat(2, 1fr);\n    gap: 1rem;\n}"
+            },
+            {
+                language: "Java",
+                prompt: "วนลูปรวมตัวเลขใน Array แล้วคืนผลรวม",
+                sampleSolution: "static int sum(int[] numbers) {\n    int total = 0;\n    for (int number : numbers) {\n        total += number;\n    }\n    return total;\n}"
+            },
+            {
+                language: "Java",
+                prompt: "for-each: แสดงคะแนนทุกตัวใน Array",
+                sampleSolution: "int[] scores = {10, 20, 30};\nfor (int score : scores) {\n    System.out.println(score);\n}"
+            },
+            {
+                language: "C++",
+                prompt: "เงื่อนไข if: ตรวจคะแนนก่อนแสดงผล",
+                sampleSolution: "int score = 10;\nif (score >= 10) {\n    std::cout << \"Passed\";\n}"
+            },
+            {
+                language: "C++",
+                prompt: "เงื่อนไข if: ตรวจว่าคะแนนผ่านเกณฑ์หรือไม่",
+                sampleSolution: "int score = 75;\nif (score >= 50) {\n    std::cout << \"Passed\";\n}"
+            },
+            {
+                language: "C#",
+                prompt: "ใช้ foreach วนรวมคะแนนใน Array",
+                sampleSolution: "static int Sum(int[] numbers) {\n    int total = 0;\n    foreach (int number in numbers) {\n        total += number;\n    }\n    return total;\n}"
+            },
+            {
+                language: "C#",
+                prompt: "เงื่อนไข if: ตรวจคะแนนผ่านด้วย Console",
+                sampleSolution: "int score = 80;\nif (score >= 50) {\n    Console.WriteLine(\"Passed\");\n}"
+            },
+            {
+                language: "PHP",
+                prompt: "ฟังก์ชัน PHP: สร้างข้อความทักทาย",
+                sampleSolution: "function greet($name) {\n    return \"Hello, \" . $name;\n}\necho greet(\"Mina\");"
+            },
+            {
+                language: "PHP",
+                prompt: "ตัวแปรและการแสดงข้อความใน PHP",
+                sampleSolution: "$name = \"Mina\";\necho \"Hello, \" . $name;"
+            },
+            {
+                language: "SQL",
+                prompt: "SQL: เลือกชื่อจากตาราง students",
+                sampleSolution: "SELECT name FROM students;"
+            },
+            {
+                language: "SQL",
+                prompt: "SQL: เพิ่มข้อมูลนักเรียนหนึ่งรายการ",
+                sampleSolution: "INSERT INTO students (id, name) VALUES (1, 'Mina');"
+            },
+            {
+                language: "Go",
+                prompt: "ใช้ range วนรวมตัวเลขใน slice",
+                sampleSolution: "func sum(numbers []int) int {\n    total := 0\n    for _, number := range numbers {\n        total += number\n    }\n    return total\n}"
+            },
+            {
+                language: "Go",
+                prompt: "ฟังก์ชัน Go: ตรวจสอบว่าเป็นเลขคู่หรือไม่",
+                sampleSolution: "func isEven(number int) bool {\n    return number%2 == 0\n}"
+            }
+        ];
+
+        const codeCompletions = {
+            Python: ["print()", "pass", "property", "numbers", "squares", "evens", "for item in items:", "if condition:", "def function_name():", "return", "range()"],
+            JavaScript: ["Promise", "Promise.resolve()", "parseInt()", "push()", "async", "function", "getData()", "response", "await", "fetch()", "const", "console.log()", "return"],
+            "HTML / CSS": [".box", ".grid", "padding:", "position:", "display: flex;", "display: grid;", "grid-template-columns:", "justify-content: center;", "align-items: center;", "color:"],
+            Java: ["public", "private", "protected", "package", "int", "numbers", "total", "System.out.println()", "for", "return", "static"],
+            "C++": ["public:", "private:", "protected:", "printf()", "std::cout", "push_back()", "int", "score", "if", "for", "return"],
+            "C#": ["public", "private", "protected", "partial", "Console.WriteLine()", "foreach", "int", "score", "return", "static"],
+            PHP: ["print", "print_r()", "public", "private", "protected", "function", "$name", "greet()", "echo", "return"],
+            SQL: ["PRIMARY KEY", "PROCEDURE", "PARTITION BY", "SELECT", "name", "FROM", "students", "INSERT INTO", "VALUES", "WHERE", "ORDER BY"],
+            Go: ["package", "print()", "println()", "panic()", "func", "sum()", "numbers", "total", "for", "range", "return"]
+        };
+
+        // State Management
+        class CodeQuestApp {
+            constructor() {
+                this.currentLesson = null;
+                this.selectedLanguage = 'all';
+                this.currentQuizIndex = 0;
+                this.score = 0;
+                this.userAnswers = [];
+                this.currentStepIndex = 0;
+                this.allStepsFinished = false;
+                this.quickChallenge = null;
+                this.quickTestInterval = null;
+                this.quickTestDeadline = 0;
+                this.quickTestMatchedChars = 0;
+                this.quickTestCompleted = false;
+                this.quickCompletionSuggestions = [];
+                this.quickCompletionIndex = 0;
+                this.quickCompletionStart = 0;
+                this.quickCompletionEnd = 0;
+                this.completedCount = parseInt(localStorage.getItem('cq_completed') || '0');
+                const speedEditor = document.getElementById('speed-code-input');
+                speedEditor.addEventListener('input', () => {
+                    this.updateQuickTestGame();
+                    this.updateQuickTestSuggestions();
+                });
+                speedEditor.addEventListener('keydown', event => this.handleQuickTestKeydown(event));
+                this.initStats();
+            }
+
+            selectLanguage(lang, btnElement) {
+                this.selectedLanguage = lang;
+                document.querySelectorAll('.topic-btn').forEach(btn => {
+                    btn.className = "topic-btn px-4 py-2 rounded-xl text-xs font-semibold border transition-all bg-slate-900/80 text-slate-300 border-slate-700 hover:border-indigo-500/50";
+                });
+                btnElement.className = "topic-btn active px-4 py-2 rounded-xl text-xs font-semibold border transition-all bg-indigo-600 text-white border-indigo-400 shadow-md shadow-indigo-900/40";
+            }
+
+            initStats() {
+                document.getElementById('completed-count').textContent = this.completedCount;
+            }
+
+            showView(viewId) {
+                if (viewId !== 'view-speed') this.stopQuickTestTimer();
+                ['view-home', 'view-loading', 'view-lesson', 'view-quiz', 'view-result'].forEach(id => {
+                    document.getElementById(id).classList.add('hidden');
+                });
+                document.getElementById('view-speed').classList.add('hidden');
+                document.getElementById(viewId).classList.remove('hidden');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+
+            goHome() {
+                this.stopQuickTestTimer();
+                this.showView('view-home');
+            }
+
+            async startRandomLesson(mode) {
+                this.showView('view-loading');
+                const langLabel = this.selectedLanguage === 'all' ? 'ทุกภาษา' : this.selectedLanguage;
+                
+                if (mode === 'ai') {
+                    document.getElementById('loading-text').textContent = `🤖 อาจารย์ AI กำลังสุ่มเนื้อหาในภาษา ${langLabel}...`;
+                    try {
+                        const lessonData = await this.fetchAILesson();
+                        if (lessonData && Array.isArray(lessonData.guidedSteps) && lessonData.guidedSteps.length > 0) {
+                            this.currentLesson = lessonData;
+                            this.renderLesson();
+                            this.showView('view-lesson');
+                            return;
+                        }
+                    } catch (err) {
+                        console.warn("AI Generation failed, falling back to offline database:", err);
+                        this.showToast("AI สร้างบทเรียนไม่ได้ กำลังใช้คลังบทเรียนสำรองแทน", "error");
+                    }
+                }
+
+                // Standard Mode or Fallback (filtered by selected language)
+                document.getElementById('loading-text').textContent = `กำลังสุ่มเนื้อหา (${langLabel}) จากคลังบทเรียน...`;
+                setTimeout(() => {
+                    const pool = this.selectedLanguage === 'all'
+                        ? offlineDatabase
+                        : offlineDatabase.filter(item => item.language.toLowerCase() === this.selectedLanguage.toLowerCase());
+                    const activePool = pool.length > 0 ? pool : offlineDatabase;
+                    const randomIndex = Math.floor(Math.random() * activePool.length);
+                    this.currentLesson = activePool[randomIndex];
+                    this.renderLesson();
+                    this.showView('view-lesson');
+                }, 800);
+            }
+
+            async fetchAILesson() {
+                const availableLanguages = Array.from(new Set(offlineDatabase.map(item => item.language))).join(", ");
+                const langInstruction = this.selectedLanguage === 'all'
+                    ? `สุ่มภาษาโปรแกรมมิ่งมา 1 ภาษาจากรายการนี้: ${availableLanguages}`
+                    : `ใช้ภาษา "${this.selectedLanguage}" เท่านั้น`;
+
+                const prompt = `สวมบทบาทเป็นอาจารย์สอนเขียนโค้ดที่ใจดีและอธิบายเข้าใจง่าย ${langInstruction} แล้วสุ่มหัวข้อการเขียนโค้ดที่น่าสนใจในภาษานั้นมา 1 หัวข้อ ออกแบบการสอนแบบพาเขียนโค้ดทีละสเต็ป (guidedSteps) จำนวน 3 ขั้นตอนต่อเนื่องกัน โดยแต่ละขั้นตอนมี: teacherSpeech (คำพูดอาจารย์อธิบายสั้นๆ เป็นกันเอง), instruction (คำสั่งแนะนำให้นักเรียนพิมพ์โค้ด), hintCode (โค้ดตัวอย่างที่สมบูรณ์ของขั้นนั้นๆ โดยต่อยอดจากขั้นก่อนหน้า), requiredKeywords (อาร์เรย์คำสำคัญ 2-3 คำที่ต้องมีในโค้ดของขั้นนั้นเพื่อใช้ตรวจคำตอบ), successMsg (คำชมของอาจารย์เมื่อตรวจผ่าน), codeExplanation (คำอธิบายละเอียดว่าโค้ดที่นักเรียนเพิ่งเขียนในขั้นนี้คืออะไร แต่ละส่วนทำงานอย่างไร) และสร้างแบบทดสอบหลังเรียน (quiz) 3 ข้อ พร้อมตัวเลือก 4 ข้อ (options), index คำตอบที่ถูก (correctAnswer 0-3) และคำอธิบายเฉลย (explanation) ตอบกลับเป็น JSON เท่านั้น โครงสร้าง: { "language": "...", "topic": "...", "teacherIntro": "...", "guidedSteps": [ { "teacherSpeech": "...", "instruction": "...", "hintCode": "...", "requiredKeywords": ["..."], "successMsg": "...", "codeExplanation": "..." } ], "quiz": [ { "question": "...", "options": ["...", "...", "...", "..."], "correctAnswer": 0, "explanation": "..." } ] }`;
+                
+                const payload = {
+                    contents: [{ parts: [{ text: prompt }] }],
+                    generationConfig: { responseMimeType: "application/json" }
+                };
+
+                const apiKey = "";
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
+
+                let response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) throw new Error("API Network error");
+                
+                const result = await response.json();
+                const text = result?.candidates?.[0]?.content?.parts?.[0]?.text;
+                if (!text) throw new Error("Empty AI response");
+
+                return JSON.parse(text);
+            }
+
+            renderLesson() {
+                document.getElementById('lesson-lang-badge').textContent = this.currentLesson.language;
+                document.getElementById('lesson-title').textContent = this.currentLesson.topic;
+                document.getElementById('student-code-input').value = '';
+                
+                this.currentStepIndex = 0;
+                this.allStepsFinished = false;
+                this.renderGuidedStep();
+            }
+
+            renderGuidedStep() {
+                const steps = this.currentLesson.guidedSteps;
+                const total = steps.length;
+                const step = steps[this.currentStepIndex];
+
+                // Progress bar calculation
+                const completedCount = this.allStepsFinished ? total : this.currentStepIndex;
+                const percent = Math.round((completedCount / total) * 100);
+                document.getElementById('study-progress-text').textContent = this.allStepsFinished 
+                    ? `เรียนครบทั้ง ${total} ขั้นตอนแล้ว (100%)` 
+                    : `ขั้นที่ ${this.currentStepIndex + 1} จาก ${total} (${percent}%)`;
+                document.getElementById('study-progress-bar').style.width = `${percent}%`;
+
+                // Teacher dialogue & instruction
+                document.getElementById('step-badge').textContent = `สเต็ปที่ ${this.currentStepIndex + 1} / ${total}`;
+                const introPrefix = (this.currentStepIndex === 0 && this.currentLesson.teacherIntro) 
+                    ? `${this.currentLesson.teacherIntro} — ` 
+                    : '';
+                document.getElementById('teacher-speech').textContent = introPrefix + step.teacherSpeech;
+                document.getElementById('step-instruction').textContent = step.instruction;
+                document.getElementById('step-hint-code').querySelector('code').textContent = step.hintCode;
+
+                // Hide feedback box when moving to new step
+                if (!this.allStepsFinished) {
+                    document.getElementById('teacher-feedback').classList.add('hidden');
+                    document.getElementById('teacher-code-explanation-box').classList.add('hidden');
+                    document.getElementById('btn-next-step').classList.add('hidden');
+                }
+
+                // Render step indicator pills
+                const badgesEl = document.getElementById('completed-steps-badges');
+                badgesEl.innerHTML = steps.map((_, idx) => {
+                    if (this.allStepsFinished || idx < this.currentStepIndex) {
+                        return `<span class="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30"><i class="fa-solid fa-check mr-1"></i>ขั้น ${idx + 1}</span>`;
+                    } else if (idx === this.currentStepIndex) {
+                        return `<span class="px-2 py-0.5 rounded bg-indigo-500/20 text-indigo-300 border border-indigo-500/40 font-semibold">ขั้น ${idx + 1} (กำลังฝึก)</span>`;
+                    } else {
+                        return `<span class="px-2 py-0.5 rounded bg-slate-800 text-slate-500 border border-slate-700">ขั้น ${idx + 1}</span>`;
+                    }
+                }).join('');
+
+                // Update check button & quiz lock state
+                const checkBtn = document.getElementById('btn-check-code');
+                const quizBtn = document.getElementById('btn-start-quiz');
+                const quizIcon = document.getElementById('btn-start-quiz-icon');
+                const lockHint = document.getElementById('quiz-lock-hint');
+
+                if (this.allStepsFinished) {
+                    checkBtn.disabled = true;
+                    checkBtn.className = "w-full sm:w-auto bg-emerald-600/20 text-emerald-300 border border-emerald-500/40 font-semibold px-5 py-2.5 rounded-xl flex items-center justify-center gap-2 text-sm cursor-default";
+                    checkBtn.innerHTML = `<i class="fa-solid fa-circle-check"></i><span>อาจารย์ตรวจผ่านครบทุกขั้นแล้ว</span>`;
+
+                    quizBtn.disabled = false;
+                    quizBtn.className = "w-full sm:w-auto bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white font-semibold px-6 py-3 rounded-xl shadow-lg shadow-emerald-900/30 flex items-center justify-center gap-2 transition-all hover:scale-[1.02] active:scale-95 text-sm cursor-pointer";
+                    quizIcon.className = "fa-solid fa-play";
+                    lockHint.innerHTML = `<i class="fa-solid fa-unlock text-emerald-400"></i> <span class="text-emerald-300">ฝึกเขียนโค้ดครบแล้ว! กดเริ่มทำแบบทดสอบหลังเรียนได้เลย</span>`;
+                } else {
+                    checkBtn.disabled = false;
+                    checkBtn.className = "w-full sm:w-auto bg-indigo-600 hover:bg-indigo-500 text-white font-semibold px-5 py-2.5 rounded-xl shadow-lg shadow-indigo-900/30 flex items-center justify-center gap-2 transition-all text-sm cursor-pointer";
+                    checkBtn.innerHTML = `<i class="fa-solid fa-check-double"></i><span>ส่งให้อาจารย์ตรวจโค้ดขั้นที่ ${this.currentStepIndex + 1}</span>`;
+
+                    quizBtn.disabled = true;
+                    quizBtn.className = "w-full sm:w-auto bg-slate-700 text-slate-400 cursor-not-allowed font-semibold px-6 py-3 rounded-xl flex items-center justify-center gap-2 transition-all text-sm";
+                    quizIcon.className = "fa-solid fa-lock";
+                    lockHint.innerHTML = `<i class="fa-solid fa-lock"></i> ฝึกเขียนโค้ดตามอาจารย์ให้ครบทั้ง ${total} สเต็ป เพื่อปลดล็อกแบบทดสอบ`;
+                }
+            }
+
+            autoFillStepCode() {
+                const step = this.currentLesson.guidedSteps[this.currentStepIndex];
+                document.getElementById('student-code-input').value = step.hintCode;
+                this.showToast("อาจารย์ช่วยพิมพ์โค้ดตัวอย่างให้แล้ว ลองกดส่งตรวจได้เลย!", "success");
+            }
+
+            checkStudentCode() {
+                const userCode = document.getElementById('student-code-input').value.trim();
+                const step = this.currentLesson.guidedSteps[this.currentStepIndex];
+                const feedbackBox = document.getElementById('teacher-feedback');
+                const feedbackIcon = document.getElementById('teacher-feedback-icon');
+                const feedbackText = document.getElementById('teacher-feedback-text');
+                const expBox = document.getElementById('teacher-code-explanation-box');
+                const expText = document.getElementById('teacher-code-explanation-text');
+                const nextStepBtn = document.getElementById('btn-next-step');
+                feedbackBox.classList.remove('hidden');
+
+                if (!userCode) {
+                    feedbackBox.className = "p-4 rounded-xl border border-rose-500/50 bg-rose-950/30 text-rose-200 text-xs sm:text-sm space-y-3";
+                    feedbackIcon.className = "fa-solid fa-circle-exclamation text-rose-400 mt-0.5";
+                    feedbackText.textContent = "อาจารย์: ยังไม่ได้พิมพ์โค้ดเลยครับ ลองพิมพ์ตามคำแนะนำด้านบนดูก่อนนะ!";
+                    expBox.classList.add('hidden');
+                    nextStepBtn.classList.add('hidden');
+                    return;
+                }
+
+                // Check required keywords (case-insensitive)
+                const normalizedCode = userCode.toLowerCase().replace(/\s+/g, ' ');
+                const missingKeywords = (step.requiredKeywords || []).filter(kw => 
+                    !normalizedCode.includes(kw.toLowerCase())
+                );
+
+                if (missingKeywords.length > 0) {
+                    feedbackBox.className = "p-4 rounded-xl border border-amber-500/50 bg-amber-950/30 text-amber-200 text-xs sm:text-sm space-y-3";
+                    feedbackIcon.className = "fa-solid fa-lightbulb text-amber-400 mt-0.5";
+                    feedbackText.textContent = `อาจารย์: เกือบถูกแล้วครับ! ลองเช็กดูว่าลืมใส่ส่วนสำคัญอย่าง "${missingKeywords[0]}" หรือเปล่า ลองดูตัวอย่างด้านบนแล้วแก้ใหม่นะ`;
+                    expBox.classList.add('hidden');
+                    nextStepBtn.classList.add('hidden');
+                    return;
+                }
+
+                // Passed current step - show teacher feedback & detailed code explanation
+                feedbackBox.className = "p-4 rounded-xl border border-emerald-500/50 bg-emerald-950/30 text-emerald-200 text-xs sm:text-sm space-y-3";
+                feedbackIcon.className = "fa-solid fa-circle-check text-emerald-400 mt-0.5";
+                feedbackText.textContent = `อาจารย์: ${step.successMsg}`;
+
+                expText.textContent = step.codeExplanation || "โค้ดส่วนนี้ทำงานตามโครงสร้างที่กำหนดไว้ได้อย่างถูกต้องครับ";
+                expBox.classList.remove('hidden');
+
+                if (this.currentStepIndex < this.currentLesson.guidedSteps.length - 1) {
+                    this.showToast(`ผ่านขั้นที่ ${this.currentStepIndex + 1} แล้ว! อ่านคำอธิบายโค้ดด้านล่างได้เลย`, "success");
+                    document.getElementById('btn-check-code').classList.add('hidden');
+                    nextStepBtn.classList.remove('hidden');
+                } else {
+                    this.allStepsFinished = true;
+                    nextStepBtn.classList.add('hidden');
+                    this.renderGuidedStep();
+                    this.showToast("ยอดเยี่ยม! ฝึกเขียนครบทุกขั้นแล้ว ปลดล็อกแบบทดสอบเรียบร้อย 🎉", "success");
+                }
+            }
+
+            goToNextStep() {
+                if (this.currentStepIndex < this.currentLesson.guidedSteps.length - 1) {
+                    this.currentStepIndex++;
+                    document.getElementById('btn-check-code').classList.remove('hidden');
+                    this.renderGuidedStep();
+                }
+            }
+
+            startQuickTest() {
+                this.stopQuickTestTimer();
+                const pool = this.selectedLanguage === 'all'
+                    ? quickCodingChallenges
+                    : quickCodingChallenges.filter(challenge =>
+                        challenge.language.toLowerCase() === this.selectedLanguage.toLowerCase()
+                    );
+
+                if (pool.length === 0) {
+                    this.showToast("ยังไม่มีโจทย์ทดสอบสำหรับภาษานี้", "error");
+                    return;
+                }
+
+                const nextPool = pool.length > 1
+                    ? pool.filter(challenge => challenge !== this.quickChallenge)
+                    : pool;
+                this.quickChallenge = nextPool[Math.floor(Math.random() * nextPool.length)];
+                document.getElementById('speed-language-badge').textContent = this.quickChallenge.language;
+                document.getElementById('speed-prompt').textContent = this.quickChallenge.prompt;
+                document.getElementById('speed-sample-code').textContent = this.quickChallenge.sampleSolution;
+                document.getElementById('speed-code-input').value = '';
+                document.getElementById('speed-code-input').disabled = false;
+                document.getElementById('speed-feedback').classList.add('hidden');
+                document.getElementById('btn-repeat-speed').classList.add('hidden');
+                document.getElementById('speed-progress-bar').style.width = '0%';
+                document.getElementById('speed-progress-text').textContent = `พิมพ์ตรง 0/${this.quickChallenge.sampleSolution.length} ตัวอักษร (0%)`;
+                document.getElementById('speed-typing-hint').textContent = "พิมพ์ตามตัวอย่างด้านล่าง ตัวละครจะกระโดดไปข้างหน้าทีละส่วน";
+
+                const player = document.getElementById('speed-player');
+                player.style.left = '8%';
+                player.classList.remove('hero-jump', 'hero-attack');
+                document.getElementById('speed-slime').classList.remove('slime-defeated');
+                this.quickTestMatchedChars = 0;
+                this.quickTestCompleted = false;
+                this.quickCompletionSuggestions = [];
+                document.getElementById('speed-completion-panel').classList.add('hidden');
+                this.showView('view-speed');
+
+                this.quickTestDeadline = Date.now() + 60000;
+                this.quickTestInterval = setInterval(() => this.updateQuickTestTimer(), 250);
+                this.updateQuickTestTimer();
+                document.getElementById('speed-code-input').focus();
+            }
+
+            updateQuickTestTimer() {
+                const remaining = Math.max(0, Math.ceil((this.quickTestDeadline - Date.now()) / 1000));
+                const minutes = Math.floor(remaining / 60);
+                const seconds = remaining % 60;
+                const timer = document.getElementById('speed-timer');
+                timer.textContent = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+                timer.className = remaining <= 10
+                    ? "text-xl font-black text-rose-400 tabular-nums"
+                    : "text-xl font-black text-emerald-300 tabular-nums";
+
+                if (remaining === 0 && this.quickTestInterval !== null) {
+                    this.finishQuickTest(true);
+                }
+            }
+
+            updateQuickTestSuggestions() {
+                if (!this.quickChallenge || this.quickTestInterval === null || this.quickTestCompleted) {
+                    this.hideQuickTestSuggestions();
+                    return;
+                }
+
+                const editor = document.getElementById('speed-code-input');
+                const caret = editor.selectionStart;
+                const prefix = editor.value.slice(0, caret).match(/[A-Za-z_$#.][A-Za-z0-9_$#.-]*$/);
+                if (!prefix) {
+                    this.hideQuickTestSuggestions();
+                    return;
+                }
+
+                const token = prefix[0];
+                const suffix = editor.value.slice(caret).match(/^[A-Za-z0-9_$#.-]*/)[0];
+                const currentToken = `${token}${suffix}`.toLowerCase();
+                const candidates = codeCompletions[this.quickChallenge.language] || [];
+                this.quickCompletionSuggestions = candidates
+                    .filter(candidate =>
+                        candidate.toLowerCase().startsWith(token.toLowerCase()) &&
+                        candidate.toLowerCase() !== currentToken
+                    )
+                    .slice(0, 6);
+
+                if (this.quickCompletionSuggestions.length === 0) {
+                    this.hideQuickTestSuggestions();
+                    return;
+                }
+
+                this.quickCompletionStart = caret - token.length;
+                this.quickCompletionEnd = caret + suffix.length;
+                this.quickCompletionIndex = 0;
+                document.getElementById('speed-completion-language').textContent = this.quickChallenge.language;
+                document.getElementById('speed-completion-panel').classList.remove('hidden');
+                this.renderQuickTestSuggestions();
+            }
+
+            renderQuickTestSuggestions() {
+                const list = document.getElementById('speed-completion-list');
+                list.replaceChildren();
+                this.quickCompletionSuggestions.forEach((suggestion, index) => {
+                    const button = document.createElement('button');
+                    button.type = 'button';
+                    button.setAttribute('role', 'option');
+                    button.setAttribute('aria-selected', String(index === this.quickCompletionIndex));
+                    button.className = index === this.quickCompletionIndex
+                        ? "w-full text-left px-3 py-1.5 rounded text-xs font-mono bg-indigo-600 text-white"
+                        : "w-full text-left px-3 py-1.5 rounded text-xs font-mono text-slate-300 hover:bg-slate-800";
+                    button.textContent = suggestion;
+                    button.addEventListener('mousedown', event => event.preventDefault());
+                    button.addEventListener('click', () => this.acceptQuickTestSuggestion(index));
+                    list.appendChild(button);
+                });
+            }
+
+            handleQuickTestKeydown(event) {
+                const hasSuggestions = this.quickCompletionSuggestions.length > 0 &&
+                    !document.getElementById('speed-completion-panel').classList.contains('hidden');
+
+                if (event.key === 'Escape' && hasSuggestions) {
+                    event.preventDefault();
+                    this.hideQuickTestSuggestions();
+                    return;
+                }
+
+                if (hasSuggestions && (event.key === 'ArrowDown' || event.key === 'ArrowUp')) {
+                    event.preventDefault();
+                    const direction = event.key === 'ArrowDown' ? 1 : -1;
+                    const count = this.quickCompletionSuggestions.length;
+                    this.quickCompletionIndex = (this.quickCompletionIndex + direction + count) % count;
+                    this.renderQuickTestSuggestions();
+                    return;
+                }
+
+                if (hasSuggestions && (event.key === 'Tab' || event.key === 'Enter')) {
+                    event.preventDefault();
+                    this.acceptQuickTestSuggestion(this.quickCompletionIndex);
+                    return;
+                }
+
+                if (event.key === 'Tab') {
+                    event.preventDefault();
+                    const editor = document.getElementById('speed-code-input');
+                    editor.setRangeText('    ', editor.selectionStart, editor.selectionEnd, 'end');
+                    editor.dispatchEvent(new Event('input', { bubbles: true }));
+                }
+            }
+
+            acceptQuickTestSuggestion(index) {
+                const suggestion = this.quickCompletionSuggestions[index];
+                if (!suggestion) return;
+
+                const editor = document.getElementById('speed-code-input');
+                editor.setRangeText(suggestion, this.quickCompletionStart, this.quickCompletionEnd, 'end');
+                this.hideQuickTestSuggestions();
+                editor.focus();
+                editor.dispatchEvent(new Event('input', { bubbles: true }));
+            }
+
+            hideQuickTestSuggestions() {
+                this.quickCompletionSuggestions = [];
+                document.getElementById('speed-completion-panel').classList.add('hidden');
+            }
+
+            updateQuickTestGame() {
+                if (!this.quickChallenge || this.quickTestInterval === null || this.quickTestCompleted) return;
+                if (Date.now() >= this.quickTestDeadline) {
+                    this.finishQuickTest(true);
+                    return;
+                }
+
+                const code = document.getElementById('speed-code-input').value;
+                const sample = this.quickChallenge.sampleSolution;
+                let matched = 0;
+                while (matched < code.length && matched < sample.length && code[matched] === sample[matched]) {
+                    matched++;
+                }
+
+                const progress = Math.round((matched / sample.length) * 100);
+                document.getElementById('speed-progress-bar').style.width = `${progress}%`;
+                document.getElementById('speed-progress-text').textContent =
+                    `พิมพ์ตรง ${matched}/${sample.length} ตัวอักษร (${progress}%)`;
+                document.getElementById('speed-typing-hint').textContent = code.length > matched
+                    ? "มีตัวอักษรไม่ตรงกับตัวอย่าง แก้ไขจุดที่ผิดแล้วตัวละครจะไปต่อ"
+                    : "พิมพ์ตามตัวอย่างต่อได้เลย ตัวละครกำลังเดินหน้า!";
+                document.getElementById('speed-player').style.left = `${8 + progress * 0.74}%`;
+
+                if (matched > this.quickTestMatchedChars) {
+                    const player = document.getElementById('speed-player');
+                    player.classList.remove('hero-jump');
+                    void player.offsetWidth;
+                    player.classList.add('hero-jump');
+                }
+                this.quickTestMatchedChars = matched;
+
+                if (code === sample) this.finishQuickTest(false);
+            }
+
+            finishQuickTest(timeExpired) {
+                if (!this.quickChallenge || this.quickTestCompleted) return;
+
+                const expired = timeExpired || Date.now() >= this.quickTestDeadline;
+                const code = document.getElementById('speed-code-input').value;
+                const passed = !expired && code === this.quickChallenge.sampleSolution;
+                if (!expired && !passed) return;
+
+                this.quickTestCompleted = true;
+                this.stopQuickTestTimer();
+                this.hideQuickTestSuggestions();
+                document.getElementById('speed-code-input').disabled = true;
+
+                const feedback = document.getElementById('speed-feedback');
+                const feedbackText = document.getElementById('speed-feedback-text');
+                if (passed) {
+                    feedback.className = "p-4 rounded-xl border border-emerald-500/50 bg-emerald-950/30 text-emerald-200 text-sm space-y-3";
+                    feedbackText.textContent = "พิมพ์ตรงทุกตัวอักษร! ตัวละครโจมตีสไลม์สำเร็จ 🎉";
+                    document.getElementById('speed-player').classList.remove('hero-jump');
+                    document.getElementById('speed-player').classList.add('hero-attack');
+                    document.getElementById('speed-slime').classList.add('slime-defeated');
+                } else {
+                    feedback.className = "p-4 rounded-xl border border-amber-500/50 bg-amber-950/30 text-amber-200 text-sm space-y-3";
+                    feedbackText.textContent = `หมดเวลา! พิมพ์ตรงได้ ${this.quickTestMatchedChars}/${this.quickChallenge.sampleSolution.length} ตัวอักษร ลองสุ่มตัวอย่างใหม่ได้เลย`;
+                }
+
+                feedback.classList.remove('hidden');
+                document.getElementById('btn-repeat-speed').classList.remove('hidden');
+            }
+
+            stopQuickTestTimer() {
+                if (this.quickTestInterval !== null) {
+                    clearInterval(this.quickTestInterval);
+                    this.quickTestInterval = null;
+                }
+            }
+
+            startQuiz() {
+                if (!this.allStepsFinished) {
+                    this.showToast("กรุณาฝึกเขียนโค้ดให้ครบทุกขั้นก่อนเริ่มแบบทดสอบ", "error");
+                    return;
+                }
+
+                const quiz = this.currentLesson && this.currentLesson.quiz;
+                if (!Array.isArray(quiz) || quiz.length === 0 || quiz.some(question =>
+                    !question ||
+                    !Array.isArray(question.options) ||
+                    question.options.length < 2 ||
+                    !Number.isInteger(question.correctAnswer) ||
+                    question.correctAnswer < 0 ||
+                    question.correctAnswer >= question.options.length
+                )) {
+                    this.showToast("บทเรียนนี้ไม่มีชุดคำถามที่สมบูรณ์ กรุณาสุ่มบทเรียนใหม่", "error");
+                    return;
+                }
+
+                this.currentQuizIndex = 0;
+                this.score = 0;
+                this.userAnswers = [];
+                this.renderQuiz();
+                this.showView('view-quiz');
+            }
+
+            renderQuiz() {
+                const quiz = this.currentLesson.quiz;
+                const question = quiz[this.currentQuizIndex];
+                document.getElementById('current-q-num').textContent = this.currentQuizIndex + 1;
+                document.getElementById('total-q-num').textContent = quiz.length;
+                document.getElementById('quiz-lang-tag').textContent = `${this.currentLesson.language} Quiz`;
+                document.getElementById('quiz-question').textContent = question.question;
+
+                const optionsElement = document.getElementById('quiz-options');
+                optionsElement.replaceChildren();
+                question.options.forEach((option, index) => {
+                    const button = document.createElement('button');
+                    button.type = 'button';
+                    button.className = "w-full text-left bg-slate-900/70 border border-slate-700 hover:border-indigo-500/70 hover:bg-slate-900 text-slate-200 px-4 py-3 rounded-xl transition-all text-sm";
+                    button.textContent = `${String.fromCharCode(65 + index)}. ${option}`;
+                    button.addEventListener('click', () => this.selectQuizAnswer(index));
+                    optionsElement.appendChild(button);
+                });
+
+                document.getElementById('quiz-explanation-box').classList.add('hidden');
+                document.getElementById('btn-next-quiz').classList.add('hidden');
+            }
+
+            selectQuizAnswer(answerIndex) {
+                const question = this.currentLesson.quiz[this.currentQuizIndex];
+                if (this.userAnswers[this.currentQuizIndex] !== undefined) return;
+
+                const isCorrect = answerIndex === question.correctAnswer;
+                this.userAnswers[this.currentQuizIndex] = answerIndex;
+                if (isCorrect) this.score++;
+
+                const optionButtons = document.getElementById('quiz-options').querySelectorAll('button');
+                optionButtons.forEach((button, index) => {
+                    button.disabled = true;
+                    button.classList.remove('hover:border-indigo-500/70', 'hover:bg-slate-900');
+                    if (index === question.correctAnswer) {
+                        button.classList.add('border-emerald-500/70', 'bg-emerald-950/40', 'text-emerald-200');
+                    } else if (index === answerIndex) {
+                        button.classList.add('border-rose-500/70', 'bg-rose-950/40', 'text-rose-200');
+                    } else {
+                        button.classList.add('opacity-60', 'cursor-not-allowed');
+                    }
+                });
+
+                const explanationBox = document.getElementById('quiz-explanation-box');
+                const resultTitle = document.getElementById('quiz-result-title');
+                explanationBox.className = isCorrect
+                    ? "p-4 rounded-xl border border-emerald-500/50 bg-emerald-950/30 text-emerald-200 text-xs sm:text-sm space-y-1"
+                    : "p-4 rounded-xl border border-rose-500/50 bg-rose-950/30 text-rose-200 text-xs sm:text-sm space-y-1";
+                resultTitle.textContent = isCorrect ? "ตอบถูกต้อง!" : "ยังไม่ถูก ลองทบทวนคำอธิบายดูนะ";
+                document.getElementById('quiz-explanation-text').textContent = question.explanation || "";
+                explanationBox.classList.remove('hidden');
+
+                const nextButton = document.getElementById('btn-next-quiz');
+                nextButton.innerHTML = this.currentQuizIndex === this.currentLesson.quiz.length - 1
+                    ? 'ดูผลคะแนน <i class="fa-solid fa-arrow-right ml-1"></i>'
+                    : 'ข้อถัดไป <i class="fa-solid fa-arrow-right ml-1"></i>';
+                nextButton.classList.remove('hidden');
+            }
+
+            nextQuizStep() {
+                if (this.userAnswers[this.currentQuizIndex] === undefined) return;
+
+                if (this.currentQuizIndex < this.currentLesson.quiz.length - 1) {
+                    this.currentQuizIndex++;
+                    this.renderQuiz();
+                } else {
+                    this.showResult();
+                }
+            }
+
+            showResult() {
+                const total = this.currentLesson.quiz.length;
+                const passed = this.score >= Math.ceil(total * 0.6);
+                document.getElementById('score-val').textContent = this.score;
+                document.getElementById('score-total').textContent = total;
+                document.getElementById('result-title').textContent = passed ? "ยอดเยี่ยมมาก!" : "พยายามอีกนิดนะ!";
+                document.getElementById('result-subtitle').textContent = passed
+                    ? "คุณทำแบบทดสอบผ่านเรียบร้อยแล้ว"
+                    : "ทบทวนบทเรียนแล้วลองทำแบบทดสอบอีกครั้ง";
+                document.getElementById('result-status').textContent = passed ? "ผ่านเกณฑ์ 🌟" : "ยังไม่ผ่านเกณฑ์";
+                document.getElementById('result-status').className = passed
+                    ? "text-sm font-bold text-emerald-400"
+                    : "text-sm font-bold text-rose-400";
+                document.getElementById('result-icon').className = passed
+                    ? "fa-solid fa-trophy text-amber-400"
+                    : "fa-solid fa-book-open text-indigo-400";
+                document.getElementById('result-icon-wrap').className = passed
+                    ? "w-20 h-20 mx-auto rounded-full flex items-center justify-center text-3xl shadow-lg bg-amber-500/10"
+                    : "w-20 h-20 mx-auto rounded-full flex items-center justify-center text-3xl shadow-lg bg-indigo-500/10";
+
+                this.completedCount++;
+                localStorage.setItem('cq_completed', String(this.completedCount));
+                this.initStats();
+                this.showView('view-result');
+            }
+
+            repeatLesson() {
+                this.startRandomLesson('standard');
+            }
+
+            showToast(message, type = "success") {
+                const toast = document.getElementById('toast');
+                const icon = document.getElementById('toast-icon');
+                document.getElementById('toast-msg').textContent = message;
+                icon.className = type === "error"
+                    ? "fa-solid fa-circle-exclamation text-rose-400"
+                    : "fa-solid fa-circle-check text-emerald-400";
+                toast.classList.remove('translate-y-20', 'opacity-0');
+                clearTimeout(this.toastTimeout);
+                this.toastTimeout = setTimeout(() => {
+                    toast.classList.add('translate-y-20', 'opacity-0');
+                }, 2800);
+            }
+        }
+
+        const app = new CodeQuestApp();
+    </script>
+</body>
+</html>
